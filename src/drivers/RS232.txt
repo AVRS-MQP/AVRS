@@ -1,0 +1,9 @@
+1 = YELLOW
+2 = ORANGE
+3 = RED
+4 = BROWN
+5 = BLACK
+6 = GREY
+7 = PURPLE
+8 = BLUE
+9 = GREEN 

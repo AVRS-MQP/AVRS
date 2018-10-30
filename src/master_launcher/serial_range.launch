@@ -1,0 +1,7 @@
+<launch>
+  <include file="$(find rosserial)/launch/serialcoms0.launch">
+  </include>
+  
+  <include file="$(find rosserial)/launch/serialcoms1.launch">
+  </include>
+</launch>
