@@ -1,7 +1,8 @@
-AVRS-MQP
+#AVRS-MQP
 
-Advisors:
-Students:
+Advisors: Craig Putnam, Jie Fu
+Students: Matthew Fortmeyer, Nikolas Gamarra, Ryan O’Brien, Jacob Remz
+
 
 ## Hey lets use markdown so it looks nice on Git
 
