@@ -1,0 +1,13 @@
+<!--Launch file for nodelets-->
+<!--see readme section on launch files for details on how to use file-->
+<!--maintainer email="nxgamarra@gmail.com">Nikolas Gamarra</maintainer-->
+
+<launch>
+
+ <!--Kinect-->
+  <include file="$(find freenect_launch)/launch/freenect.launch">
+  </include>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find master_launcher)/rviz/simple_kinect.rviz" />
+
+</launch>

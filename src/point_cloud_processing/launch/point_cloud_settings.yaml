@@ -1,0 +1,24 @@
+frame_id: 'Robot?'
+outlierRemoval_MeanK: 75
+outlierRemoval_StdDev: 2
+outlierRemoval_SearchRadius: 25
+outlierRemoval_MinNeighborsInRadius: 10
+
+passThrough_Xmin: -10
+passThrough_Xmax:  10
+passThrough_Ymin: -10
+passThrough_Ymax:  10
+passThrough_Zmin: -10
+passThrough_Zmax:  10
+
+passThrough_BoxMargin: .5
+
+plane_DistThresh: .05
+plane_LeafSize: 0.01
+don_Scale1: .3
+don_Scale2: 20
+don_Threshold: .05
+don_Segradius: 1
+don_MinClusterSize: 200
+don_maxClusterSize: 2000
+

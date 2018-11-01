@@ -1,0 +1,19 @@
+<!--One launch file to rule them all-->
+<!--see readme section on launch files for details on how to use file-->
+<!--maintainer email="nxgamarra@gmail.com">Nikolas Gamarra</maintainer-->
+
+<launch>
+ 
+ <!--Launch other nodes-->
+
+ <!--performs object detection DoN-->
+  <include file="$(find object_detective_don)/launch/object_detective_slave.launch">
+    <arg name="name" value="object_detective_don" />
+    <arg name="subscriber" value="adv_obj" />
+    <arg name="msgSubscriber" value="plane_segmented_msg"/>
+    <arg name="publisher" value="objects_don" />
+    <arg name="mode" value="u" />
+  </include>
+ <!--Making a costmmap_2d-->
+
+</launch>
