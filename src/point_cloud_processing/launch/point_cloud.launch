@@ -11,7 +11,8 @@
   <node name="pass_through_filter_objects" pkg="point_cloud_processing" type="point_cloud_processing_node" output="screen">
     <param name="subscriber" value="/camera/depth/points"/>
     <param name="publisher" value="points_cut"/>
-    <param name="mode" value="1"/>
+    <param name="mode" value="transform"/>
+    <param name="msgSubscriber" value="zzzzzzzzz"/>
   </node>
 
 </launch>

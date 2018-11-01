@@ -11,7 +11,39 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/extract_indices.h>
+//clean 
 
+
+#include <ros/ros.h>
+#include <ros/master.h>
+
+// PCL specific includes
+#include <iostream>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/common/eigen.h>
+
+#include <lidar_utility_msgs/lidarUtilitySettings.h>
+
+#include <pcl/registration/boost.h>
+#include <pcl/correspondence.h>
+#include <pcl/common/common.h>
+
+#include <pcl/common/projection_matrix.h>
+//#include <pcl/common/impl/transforms.hpp>
+#include <pcl/common/transforms.h>
+
+#include <iostream>
+
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_cloud.h>
+#include <pcl/common/transforms.h>                  //allows us to use pcl::transformPointCloud function
+#include <pcl/visualization/pcl_visualizer.h>
 #define COLOR_RED "\033[1;31m"
 #define COLOR_GREEN "\033[1;32m"
 #define COLOR_YELLOW "\033[1;33"
@@ -26,13 +58,16 @@ static float boxMargin_setting=.2;
 //This node subscribes to a PointCloud2 topic, peforms a pass through filter, and republishes the point cloud. 
 ros::Publisher pc2_pub;
 
+int debugLevel =2;
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
 
 	//pcl::PCLPointCloud2 *cloud = new pcl::PCLPointCloud2;
 
 	//Callback for filtering and republishing recived data
-	ROS_INFO("%s: In Callback",nodeName.c_str());
+
+	ROS_DEBUG_COND(debugLevel==2,"%s: In Callback",nodeName.c_str());
+	ROS_INFO("mode: %d",mode);
 	// Create a container for the data and filtered data.
 	pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
 
@@ -56,9 +91,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 	pcl::PassThrough<pcl::PCLPointCloud2> pass;
 	pass.setInputCloud (cloudPtr);
-
-	if(mode==1||mode==4){//passThrough or all
-
+	if(mode==0||mode==4){//passThrough or all
 		pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
 		pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
 		pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);//create PCLXYZ
@@ -96,11 +129,67 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 		ROS_INFO("Here");
 		ROS_INFO("\nXmax: %.6f",xMaxf);
 
-	}else if (mode==2||mode==4){//outlier removal or all
+		if(mode==1||mode==4){//outlerRemoval or all
 
-	}else if (mode==3||mode==4){//don or all
 
-	}else if(mode==4){
+		}
+		if (mode==2||mode==4){//transform or all
+			// Create a container for the data.
+			sensor_msgs::PointCloud2 output0;
+
+			pcl::PointCloud<pcl::PointNormal>::Ptr temp_cloud (new pcl::PointCloud<pcl::PointNormal> ());
+
+			pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
+			pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
+
+			pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);//convert PCLPC2 to PCLXYZ
+			float theta =-M_PI/2;
+
+			pcl::PointCloud<pcl::PointNormal> temp_cloud2;
+			/*
+			   float theta =M_PI/2;
+			   Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
+			   transform(0,0)= cos(theta);
+			   transform(0,1)= -sin(theta);
+			   transform(1,0)= sin(theta);
+			   transform(1,1)= cos(theta);
+			 */
+			//pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_transformed (new pcl::PointCloud<pcl::PointXYZ> ());
+
+
+
+
+			//		printf ("Transform: Matrix4f\n");
+			//		std::cout << transform << std::endl;
+
+
+
+			//method 2
+
+			Eigen::Affine3f transform_2 = Eigen::Affine3f::Identity();
+			transform_2.translation() << 0.0,0.0,0.0;//2.5 meters x
+			transform_2.rotate(Eigen::AngleAxisf(theta, Eigen::Vector3f::UnitX()));//rotate theata aboutz
+
+			// Print the transformation
+			printf ("\nMethod #2: using an Affine3f\n");
+			std::cout << transform_2.matrix() << std::endl;
+
+			pcl::PointCloud<pcl::PointNormal>::Ptr cloud_transformed (new pcl::PointCloud<pcl::PointNormal> ());
+			pcl::transformPointCloudWithNormals(*temp_cloud,*cloud_transformed,transform_2);
+
+			if(mode==0){
+				pcl::PCLPointCloud2 temp_output;//create PCLPC2
+				pcl::toPCLPointCloud2(*cloud_transformed,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
+				pcl_conversions::fromPCL(temp_output,output0);//convert to ROS data typeos::Subscriber sub2 = nh.subscribe(sTopic2.c_str(), 1, message_cb);
+				// Publish the data.
+				pc2_pub.publish (output0);
+			}
+		}
+	}
+	if (mode==3||mode==4){//don or all
+
+	}
+	if(mode==4){
 
 	}
 }
@@ -108,10 +197,10 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 main (int argc, char** argv)
 {
 	//initialize default topics for subscribing and publishing
-	const std::string defaultSubscriber("cloud_pcd");
-	const std::string defaultSubscriber2("plane_segmented_msg");
-	const std::string defaultPublisher("passThrough_filtered");
-	const std::string defaultMode("r");
+	const std::string defaultCloudSubscriber("cloud_pcd");
+	const std::string defaultMsgSubscriber("plane_segmented_msg");
+	const std::string defaultCloudPublisher("passThrough_filtered");
+	const std::string defaultMode("1");
 
 	// Initialize ROS
 	ros::init (argc, argv, nodeName);
@@ -137,16 +226,16 @@ main (int argc, char** argv)
 
 	//Create variables that control the topic names
 	std::string sTopic;
-	std::string sTopic2;
 	std::string pTopic;
 	std::string myMode;
+	std::string sTopic2;
 
 	if(nh.hasParam(subscriberParamName)){//Check if the user specified a subscription topic
 		nh.getParam(subscriberParamName,sTopic);
 		printf(COLOR_GREEN BAR COLOR_RST);
 		ROS_INFO("%s: A param has been set **%s** \nSetting subsceiber to: %s",nodeName.c_str(),subscriberParamName.c_str(), sTopic.c_str());
 	}else{
-		sTopic=defaultSubscriber;//set to default if not specified
+		sTopic=defaultCloudSubscriber;//set to default if not specified
 		printf(COLOR_RED BAR COLOR_RST);
 		ROS_INFO("%s: No param set **%s**  \nSetting subsceiber to: %s",nodeName.c_str(),subscriberParamName.c_str(), sTopic.c_str());
 	}
@@ -156,7 +245,7 @@ main (int argc, char** argv)
 		printf(COLOR_GREEN BAR COLOR_RST);
 		ROS_INFO("%s: A param has been set **%s** \nSetting subsceiber2 to: %s",nodeName.c_str(),subscriberParamName2.c_str(), sTopic2.c_str());
 	}else{
-		sTopic2=defaultSubscriber2;//set to default if not specified
+		sTopic2=defaultMsgSubscriber;//set to default if not specified
 		printf(COLOR_RED BAR COLOR_RST);
 		ROS_INFO("%s: No param set **%s**  \nSetting subsceiber2 to: %s",nodeName.c_str(),subscriberParamName2.c_str(), sTopic2.c_str());
 	}
@@ -166,32 +255,36 @@ main (int argc, char** argv)
 		nh.getParam(publisherParamName,pTopic);
 		ROS_INFO("%s: A param has been set **%s** \nSetting publisher to: %s",nodeName.c_str(),publisherParamName.c_str(), pTopic.c_str());
 	}else{printf(COLOR_RED BAR COLOR_RST);
-		pTopic=defaultPublisher;//set to default if not specified
+		pTopic=defaultCloudPublisher;//set to default if not specified
 		ROS_INFO("%s: No param set **%s** \nSetting publisher to: %s",nodeName.c_str(),publisherParamName.c_str(), pTopic.c_str());
 	}
 
-	if(nh.hasParam(modeParamName)){	//Check if the user specified a mode
+	if(nh.hasParam(modeParamName)){//Check if the user specified a subscription topic
 		nh.getParam(modeParamName,myMode);
 		printf(COLOR_GREEN BAR COLOR_RST);
 		ROS_INFO("%s: A param has been set **%s** \nSetting mode to: %s",nodeName.c_str(),modeParamName.c_str(), myMode.c_str());
 	}else{
-		myMode=defaultMode;//set to default if not specified
+		sTopic=defaultMode;//set to default if not specified
 		printf(COLOR_RED BAR COLOR_RST);
-		ROS_INFO("%s: No param set **%s** \nSetting mode to: %s",nodeName.c_str(),modeParamName.c_str(), myMode.c_str());
+		ROS_INFO("%s: No param set **%s**  \nSetting subsceiber to: %s",nodeName.c_str(),modeParamName.c_str(), myMode.c_str());
 	}
+
+	ROS_INFO("modex: %s",myMode.c_str());
 
 	//Clears the assigned parameter. Without this default will never be used but instead the last spefified topic
 	nh.deleteParam(subscriberParamName);
 	nh.deleteParam(publisherParamName);
 	nh.deleteParam(modeParamName);
 	nh.deleteParam(subscriberParamName2);
-	if(myMode=="1"||myMode=="passThrough"||myMode=="1"){
+	if(myMode=="0"||myMode=="passThrough"||myMode=="A"){
+		mode=0;
+	}else if(myMode=="1"||myMode=="outlierRemoval"||myMode=="B"){
 		mode=1;
-	}else if(myMode=="2"||myMode=="outlierRemoval"||myMode=="2"){
+	}else if(myMode=="2"||myMode=="transform"||myMode=="C"){
 		mode=2;
-	}else if(myMode=="3"||myMode=="don"||myMode=="3"){
+	}else if(myMode=="3"||myMode=="don"||myMode=="D"){
 		mode=3;
-	}else if(myMode=="4"||myMode=="all"||myMode=="4"){
+	}else if(myMode=="4"||myMode=="all"||myMode=="E"){
 		mode=4;
 	}
 
