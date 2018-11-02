@@ -4,14 +4,16 @@ outlierRemoval_StdDev: 2
 outlierRemoval_SearchRadius: 25
 outlierRemoval_MinNeighborsInRadius: 10
 
-passThrough_Xmin: -10
-passThrough_Xmax:  10
-passThrough_Ymin: -10
-passThrough_Ymax:  10
-passThrough_Zmin: -10
-passThrough_Zmax:  10
+passThrough_Xmin: -5
+passThrough_Xmax:  5
 
-passThrough_BoxMargin: .5
+passThrough_Ymin:  -5
+passThrough_Ymax:  5
+
+passThrough_Zmin:  0
+passThrough_Zmax:  4
+
+passThrough_BoxMargin: 1.5
 
 plane_DistThresh: .05
 plane_LeafSize: 0.01

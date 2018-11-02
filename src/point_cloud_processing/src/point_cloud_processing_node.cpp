@@ -89,20 +89,33 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 	//?
 
-	pcl::PassThrough<pcl::PCLPointCloud2> pass;
-	pass.setInputCloud (cloudPtr);
+	
+
+
+pcl::PointCloud<pcl::PointNormal>::Ptr temp_cloud (new pcl::PointCloud<pcl::PointNormal> ());
+		pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
+		pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
+		pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);//convert PCLPC2 to PCLXYZ
+		
+
 	if(mode==0||mode==4){//passThrough or all
 		pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
 		pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
 		pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);//create PCLXYZ
 		pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);//convert PCLPC2 to PCLXYZ
+
+
 		pcl::PointIndices::Ptr indices_x (new pcl::PointIndices);
 		pcl::PointIndices::Ptr indices_xy (new pcl::PointIndices);
+
+		///pcl::PCLPointX cloud_filtered_x;
+		//pcl::PCLPointCloud2 cloud_filtered_xz;
 
 		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered_x (new pcl::PointCloud<pcl::PointXYZ> ());
 		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered_xy (new pcl::PointCloud<pcl::PointXYZ> ());
 		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered_xyz (new pcl::PointCloud<pcl::PointXYZ> ());
 		pcl::PassThrough<pcl::PointXYZ> ptfilter (true); // Initializing with true will allow us to extract the removed indices
+
 		ptfilter.setInputCloud (temp_cloud);
 		ptfilter.setFilterFieldName ("x");
 		ptfilter.setFilterLimits (xMinf+boxMargin_setting, xMaxf-boxMargin_setting);
@@ -110,88 +123,83 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 		ptfilter.setInputCloud(cloud_filtered_x);
 		ptfilter.setFilterFieldName ("y");
-		ptfilter.setFilterLimits (yMinf+boxMargin_setting,yMaxf-boxMargin_setting);
+		ptfilter.setFilterLimits (yMinf+boxMargin_setting, yMaxf-boxMargin_setting);
 		ptfilter.filter (*cloud_filtered_xy);
 
 		ptfilter.setInputCloud(cloud_filtered_xy);
 		ptfilter.setFilterFieldName ("z");
-		ptfilter.setFilterLimits (zMaxf-.1,1.2);//SETTING
-		ptfilter.setNegative (false);
+		ptfilter.setFilterLimits (zMinf+boxMargin_setting, zMaxf-boxMargin_setting);//SETTING
+		//ptfilter.setNegative (false);
 		ptfilter.filter (*cloud_filtered_xyz);
+ROS_INFO("VALUE: %f",yMaxf);
 
-		sensor_msgs::PointCloud2 output;//create output container
+sensor_msgs::PointCloud2 output;//create output container
 		pcl::PCLPointCloud2 temp_output;//create PCLPC2
 		pcl::toPCLPointCloud2(*cloud_filtered_xyz,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
 		pcl_conversions::fromPCL(temp_output,output);//convert to ROS data type
 		pc2_pub.publish (output);// Publish the data.
 
-
-		ROS_INFO("Here");
-		ROS_INFO("\nXmax: %.6f",xMaxf);
-
-		if(mode==1||mode==4){//outlerRemoval or all
-
-
-		}
-		if (mode==2||mode==4){//transform or all
-			// Create a container for the data.
-			sensor_msgs::PointCloud2 output0;
-
-			pcl::PointCloud<pcl::PointNormal>::Ptr temp_cloud (new pcl::PointCloud<pcl::PointNormal> ());
-
-			pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
-			pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
-
-			pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);//convert PCLPC2 to PCLXYZ
-			float theta =-M_PI/2;
-
-			pcl::PointCloud<pcl::PointNormal> temp_cloud2;
-			/*
-			   float theta =M_PI/2;
-			   Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
-			   transform(0,0)= cos(theta);
-			   transform(0,1)= -sin(theta);
-			   transform(1,0)= sin(theta);
-			   transform(1,1)= cos(theta);
-			 */
-			//pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_transformed (new pcl::PointCloud<pcl::PointXYZ> ());
-
-
-
-
-			//		printf ("Transform: Matrix4f\n");
-			//		std::cout << transform << std::endl;
-
-
-
-			//method 2
-
-			Eigen::Affine3f transform_2 = Eigen::Affine3f::Identity();
-			transform_2.translation() << 0.0,0.0,0.0;//2.5 meters x
-			transform_2.rotate(Eigen::AngleAxisf(theta, Eigen::Vector3f::UnitX()));//rotate theata aboutz
-
-			// Print the transformation
-			printf ("\nMethod #2: using an Affine3f\n");
-			std::cout << transform_2.matrix() << std::endl;
-
-			pcl::PointCloud<pcl::PointNormal>::Ptr cloud_transformed (new pcl::PointCloud<pcl::PointNormal> ());
-			pcl::transformPointCloudWithNormals(*temp_cloud,*cloud_transformed,transform_2);
-
-			if(mode==0){
-				pcl::PCLPointCloud2 temp_output;//create PCLPC2
-				pcl::toPCLPointCloud2(*cloud_transformed,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
-				pcl_conversions::fromPCL(temp_output,output0);//convert to ROS data typeos::Subscriber sub2 = nh.subscribe(sTopic2.c_str(), 1, message_cb);
-				// Publish the data.
-				pc2_pub.publish (output0);
-			}
-		}
+	
 	}
-	if (mode==3||mode==4){//don or all
+	if(mode==1||mode==4){//outlerRemoval or all
+
 
 	}
-	if(mode==4){
+	if (mode==2||mode==4){//transform or all
 
-	}
+		ROS_INFO("beta");
+		// Create a container for the data.
+		sensor_msgs::PointCloud2 output2;
+		
+		float theta =-M_PI/2;
+
+		pcl::PointCloud<pcl::PointNormal> temp_cloud2;
+		/*
+		   float theta =M_PI/2;
+		   Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
+		   transform(0,0)= cos(theta);
+		   transform(0,1)= -sin(theta);
+		   transform(1,0)= sin(theta);
+		   transform(1,1)= cos(theta);
+		 */
+		//pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_transformed (new pcl::PointCloud<pcl::PointXYZ> ());
+
+
+
+
+		//		printf ("Transform: Matrix4f\n");
+		//		std::cout << transform << std::endl;
+
+
+
+		//method 2
+
+		Eigen::Affine3f transform_2 = Eigen::Affine3f::Identity();
+		transform_2.translation() << 0.0,0.0,0.0;//2.5 meters x
+		transform_2.rotate(Eigen::AngleAxisf(theta, Eigen::Vector3f::UnitX()));//rotate theata aboutz
+
+		// Print the transformation
+		printf ("\nMethod #2: using an Affine3f\n");
+		std::cout << transform_2.matrix() << std::endl;
+
+		pcl::PointCloud<pcl::PointNormal>::Ptr cloud_transformed (new pcl::PointCloud<pcl::PointNormal> ());
+		pcl::transformPointCloudWithNormals(*temp_cloud,*cloud_transformed,transform_2);
+
+		if(mode==2){
+			pcl::PCLPointCloud2 temp_output;//create PCLPC2
+			pcl::toPCLPointCloud2(*cloud_transformed,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
+			pcl_conversions::fromPCL(temp_output,output2);//convert to ROS data typeos::Subscriber sub2 = nh.subscribe(sTopic2.c_str(), 1, message_cb);
+			// Publish the data.
+			pc2_pub.publish (output2);
+}
+
+}
+if (mode==3||mode==4){//don or all
+
+}
+if(mode==4){
+
+}
 }
 	int
 main (int argc, char** argv)

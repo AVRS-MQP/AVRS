@@ -8,9 +8,16 @@
     <rosparam command="load" file="$(find point_cloud_processing)/launch/point_cloud_settings.yaml" />
   </group>
 
-  <node name="pass_through_filter_objects" pkg="point_cloud_processing" type="point_cloud_processing_node" output="screen">
+  <node name="poin_cloud_processor1" pkg="point_cloud_processing" type="point_cloud_processing_node" output="screen">
     <param name="subscriber" value="/camera/depth/points"/>
-    <param name="publisher" value="points_cut"/>
+    <param name="publisher" value="point_cloud_A"/>
+    <param name="mode" value="passThrough"/>
+    <param name="msgSubscriber" value="zzzzzzzzz"/>
+  </node>
+
+  <node name="poin_cloud_processor2" pkg="point_cloud_processing" type="point_cloud_processing_node" output="screen">
+    <param name="subscriber" value="point_cloud_A"/>
+    <param name="publisher" value="point_cloud_R"/>
     <param name="mode" value="transform"/>
     <param name="msgSubscriber" value="zzzzzzzzz"/>
   </node>
