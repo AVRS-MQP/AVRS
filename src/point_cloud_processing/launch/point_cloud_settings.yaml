@@ -7,11 +7,14 @@ outlierRemoval_MinNeighborsInRadius: 10
 passThrough_Xmin: -5
 passThrough_Xmax:  5
 
-passThrough_Ymin:  -5
-passThrough_Ymax:  5
+passThrough_Ymin:  -1
+passThrough_Ymax:  .85
 
 passThrough_Zmin:  0
-passThrough_Zmax:  4
+passThrough_Zmax:  3
+
+statOutlier_meanK: 150
+statOutlier_stdDev: .1
 
 passThrough_BoxMargin: 1.5
 

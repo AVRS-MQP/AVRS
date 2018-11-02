@@ -1,8 +1,17 @@
+/*Point Cloud Processing
+*Nikolas Xarles Gamarra
+*/ 
+//ROS
 #include <ros/ros.h>
+#include <ros/master.h>
+//C
+#include <stdio.h>
+#include <iostream>
+//custom msgs
 #include <lidar_utility_msgs/lidarUtilitySettings.h>
 #include <lidar_utility_msgs/roadInfo.h>
-// PCL specific includes
-#include <iostream>
+//PCL specific includes
+#include <pcl/common/common.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
@@ -11,39 +20,18 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/extract_indices.h>
-//clean 
-
-
-#include <ros/ros.h>
-#include <ros/master.h>
-
-// PCL specific includes
-#include <iostream>
-#include <sensor_msgs/PointCloud2.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/filters/statistical_outlier_removal.h>
-#include <pcl/common/eigen.h>
-
-#include <lidar_utility_msgs/lidarUtilitySettings.h>
-
 #include <pcl/registration/boost.h>
 #include <pcl/correspondence.h>
-#include <pcl/common/common.h>
-
+#include <pcl/visualization/pcl_visualizer.h>
+//PCL filtering
+#include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/filters/radius_outlier_removal.h>
+#include <pcl/filters/conditional_removal.h>
+//PCL transforming
+#include <pcl/common/eigen.h>
 #include <pcl/common/projection_matrix.h>
-//#include <pcl/common/impl/transforms.hpp>
 #include <pcl/common/transforms.h>
 
-#include <iostream>
-
-#include <pcl/io/pcd_io.h>
-#include <pcl/point_cloud.h>
-#include <pcl/common/transforms.h>                  //allows us to use pcl::transformPointCloud function
-#include <pcl/visualization/pcl_visualizer.h>
 #define COLOR_RED "\033[1;31m"
 #define COLOR_GREEN "\033[1;32m"
 #define COLOR_YELLOW "\033[1;33"
@@ -55,6 +43,9 @@ static std::string nodeName("pass_through_filter");
 static 	float xMinf, xMaxf, yMinf, yMaxf, zMinf, zMaxf;
 static bool called = false;
 static float boxMargin_setting=.2;
+
+static float statOutlier_meanK=75;
+static float statOutlier_stdDev=.9;
 //This node subscribes to a PointCloud2 topic, peforms a pass through filter, and republishes the point cloud. 
 ros::Publisher pc2_pub;
 
@@ -143,6 +134,28 @@ sensor_msgs::PointCloud2 output;//create output container
 	}
 	if(mode==1||mode==4){//outlerRemoval or all
 
+	// Create a container for the data and filtered data.
+	pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
+	pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
+
+
+	// Do data processing here...
+
+	//Convert to PCL data type
+	pcl_conversions::toPCL(*cloud_msg, *cloud);
+	pcl::PCLPointCloud2 cloud_filtered;
+		//pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
+		pcl::StatisticalOutlierRemoval<pcl::PCLPointCloud2> sor;
+		sor.setInputCloud (cloudPtr);
+		sor.setMeanK (statOutlier_meanK);//SETTING
+		sor.setStddevMulThresh (statOutlier_stdDev);//SETTING
+		sor.filter (cloud_filtered);
+//convert to ROS data type
+	sensor_msgs::PointCloud2 output;
+	//pcl_conversions::fromPCl(cloud_filtered,output);
+	pcl_conversions::fromPCL(cloud_filtered,output);
+	// Publish the data.
+	pc2_pub.publish (output);
 
 	}
 	if (mode==2||mode==4){//transform or all
@@ -223,6 +236,9 @@ main (int argc, char** argv)
 	nh.getParam("settings/passThrough_Ymax", yMaxf);
 	nh.getParam("settings/passThrough_Zmin", zMinf);
 	nh.getParam("settings/passThrough_Zmax", zMaxf);
+
+	nh.getParam("settings/statOutlier_meanK", statOutlier_meanK);
+	nh.getParam("settings/statOutlier_stdDev", statOutlier_stdDev);
 
 	//set parameters on new name
 	const std::string subscriberParamName(nodeName + "/subscriber");
