@@ -1,0 +1,9 @@
+Recieving vehicle information
+Tesla
+11 Amps
+Recieving vehicle information
+Volt
+22 Amps
+Recieving vehicle information
+Leaf
+33 Amps
