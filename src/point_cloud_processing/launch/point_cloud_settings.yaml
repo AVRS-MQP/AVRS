@@ -23,7 +23,7 @@ zTrans: 0.0
 don_scale1: 0.05
 don_scale2: 0.1
 don_threshold: 0.01
-don_segradius: 0.05
+don_segradius: 0.5
 
 don_minClusterSize: 9000
 don_maxClusterSize: 80000

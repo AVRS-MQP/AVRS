@@ -13,3 +13,8 @@ code
 ```
 git config --global user.email "MY_NAME@example.com"
 ```
+
+git log --pretty="%an %ae%n%cn %ce" | sort | uniq
+git log | grep Author: | sort | uniq
+
+
