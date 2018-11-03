@@ -18,3 +18,7 @@ git log --pretty="%an %ae%n%cn %ce" | sort | uniq
 git log | grep Author: | sort | uniq
 
 
+git commit --author="niko1499 <nxgamarra@gmail.com>" -m "commit as niko test" -a
+
+
+
