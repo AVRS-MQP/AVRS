@@ -68,8 +68,10 @@ static double scale1=10;//The smallest scale to use in the DoN filter.
 static double scale2=20;  //The largest scale to use in the DoN filter.
 static double threshold=.1;  //The minimum DoN magnitude to threshold by
 static double segradius=.5;//segment scene into clusters with given distance tolerance using euclidean clustering
-static double setMinClusterSize_setting=50;
-static double setMaxClusterSize_setting=40000;
+static double minClusterSize=50;
+static double maxClusterSize=80000;
+
+
 
 //others clean vars TODO
 static	int markerID=0;
@@ -335,8 +337,8 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
     pcl::EuclideanClusterExtraction<pcl::PointNormal> ec;
 
     ec.setClusterTolerance (segradius);
-    ec.setMinClusterSize (setMinClusterSize_setting);//SETTING old was 100000
-    ec.setMaxClusterSize (setMaxClusterSize_setting);//SETTING old was 100000
+    ec.setMinClusterSize (minClusterSize);//SETTING old was 100000
+    ec.setMaxClusterSize (maxClusterSize);//SETTING old was 100000
     ec.setSearchMethod (segtree);
     ec.setInputCloud (doncloud);
     ec.extract (cluster_indices);
@@ -590,6 +592,14 @@ main (int argc, char** argv)
   nh.getParam("settings/yTrans", yTrans);
   nh.getParam("settings/zTrans", zTrans);
 
+
+nh.getParam("settings/don_scale1",scale1);
+nh.getParam("settings/don_scale2",scale2);
+nh.getParam("settings/don_threshold",threshold);
+nh.getParam("settings/don_segradius",segradius);
+
+nh.getParam("settings/don_minClusterSize",minClusterSize);
+nh.getParam("settings/don_maxClusterSize",maxClusterSize);
   //set parameters on new name
   const std::string subscriberParamName(nodeName + "/subscriber");
   const std::string subscriberParamName2(nodeName + "/msgSubscriber");

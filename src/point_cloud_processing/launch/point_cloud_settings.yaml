@@ -13,12 +13,20 @@ passThrough_Ymax:  .85
 passThrough_Zmin:  0
 passThrough_Zmax:  3
 
-alpha: 0.0
+alpha: -M_PI/2
 beta: 0.0
 gamma: 0.0
 xTrans: 0.0
-yTrans: 5.0
+yTrans: 0.0
 zTrans: 0.0
+
+don_scale1: 0.05
+don_scale2: 0.2
+don_threshold: 0.1
+don_segradius: 0.05
+
+don_minClusterSize: 30000
+don_maxClusterSize: 80000
 
 statOutlier_meanK: 150
 statOutlier_stdDev: .1
