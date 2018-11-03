@@ -31,6 +31,25 @@
 #include <pcl/common/eigen.h>
 #include <pcl/common/projection_matrix.h>
 #include <pcl/common/transforms.h>
+//don
+#include <string>
+
+#include <pcl/point_types.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/search/organized.h>
+#include <pcl/search/kdtree.h>
+#include <pcl/features/normal_3d_omp.h>
+#include <pcl/filters/conditional_removal.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/search/organized.h>
+#include <pcl/search/kdtree.h>
+#include <pcl/features/normal_3d_omp.h>
+#include <pcl/filters/conditional_removal.h>
+#include <pcl/features/don.h>
+#include <pcl/filters/filter.h>
+#include <pcl/filters/project_inliers.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/features/don.h>
 
 //ROS_INTO 
 #define COLOR_RED "\033[1;31m"
@@ -55,8 +74,23 @@ static double threshold=.1;  //The minimum DoN magnitude to threshold by
 static double segradius=.5;//segment scene into clusters with given distance tolerance using euclidean clustering
 static double setMinClusterSize_setting=50;
 static double setMaxClusterSize_setting=40000;
+
+//others clean vars TODO
+static	int markerID=0;
+
 //This node subscribes to a PointCloud2 topic, peforms a pass through filter, and republishes the point cloud. 
 ros::Publisher pc2_pub;
+
+ros::Publisher cl0_pub;
+ros::Publisher cl1_pub;
+ros::Publisher cl2_pub;
+ros::Publisher cl3_pub;
+ros::Publisher cl4_pub;
+ros::Publisher cl5_pub;
+ros::Publisher cl6_pub;
+ros::Publisher cl7_pub;
+ros::Publisher cl8_pub;
+ros::Publisher cl9_pub;
 
 int debugLevel =2;
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
@@ -168,7 +202,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 	}
 	if (mode==2||mode==4){//transform or all
-
+ros::Time begin = ros::Time::now();
 		ROS_INFO("beta");
 		// Create a container for the data.
 		sensor_msgs::PointCloud2 output2;
@@ -198,44 +232,43 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 	}
 	if (mode==3||mode==4){//don or all
-
+ros::Time begin = ros::Time::now();
 		//-----don
-		/*
-		   ros::Time begin = ros::Time::now();
 
-		   pcl::PCDWriter writer;
-		   pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
-		   pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
+//NIKO IN
+	pcl::PCDWriter writer;
+		pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
+		pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
 
-		   pcl::PointCloud<pcl::PointXYZ>::Ptr in_cloud (new pcl::PointCloud<pcl::PointXYZ>);
-		   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+		pcl::PointCloud<pcl::PointXYZ>::Ptr in_cloud (new pcl::PointCloud<pcl::PointXYZ>);
+		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
 
-		   std::vector<int> indicies;
-		   pcl::fromPCLPointCloud2(pcl_pc2, *in_cloud);
-		   pcl::fromPCLPointCloud2(pcl_pc2, *cloud);
-		   pcl::removeNaNFromPointCloud(*in_cloud, *cloud, indicies);
+		std::vector<int> indicies;
+		pcl::fromPCLPointCloud2(pcl_pc2, *in_cloud);
+		pcl::fromPCLPointCloud2(pcl_pc2, *cloud);
+		pcl::removeNaNFromPointCloud(*in_cloud, *cloud, indicies);
 
-		   visualization_msgs::Marker marker;
-
-		   cloud->is_dense = false;
+		//visualization_msgs::MarkerArray markerArray;
+		//visualization_msgs::Marker marker;
+cloud->is_dense = false;
 
 		// Create a search tree, use KDTreee for non-organized data.
 		pcl::search::Search<pcl::PointXYZ>::Ptr tree;
 		if (cloud->isOrganized ())
 		{
-		tree.reset (new pcl::search::OrganizedNeighbor<pcl::PointXYZ> ());
+			tree.reset (new pcl::search::OrganizedNeighbor<pcl::PointXYZ> ());
 		}
 		else
 		{
-		tree.reset (new pcl::search::KdTree<pcl::PointXYZ> (false));
+			tree.reset (new pcl::search::KdTree<pcl::PointXYZ> (false));
 		}
 		// Set the input pointcloud for the search tree
 		tree->setInputCloud (cloud);
 
 		if (scale1 >= scale2)
 		{
-		ROS_INFO("Error: Large scale must be > small scale!");
-		exit (EXIT_FAILURE);
+			ROS_INFO("Error: Large scale must be > small scale!");
+			exit (EXIT_FAILURE);
 		}
 		pcl::removeNaNFromPointCloud(*cloud, *cloud, indicies);
 
@@ -331,7 +364,15 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 		int cloudNum=0;
 		int j = 0;
 
+		/*
+		if(lastMarkerMax!=markerID){
 
+			lastMarkerMax=markerID;
+			for(int k=0;k<9;k++){
+				markerArray.markers.push_back(markerBuilder(k));
+			}
+		}
+*/
 		for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it, j++)
 		{
 			pcl::PointCloud<pcl::PointNormal>::Ptr cloud_cluster_don (new pcl::PointCloud<pcl::PointNormal>);
@@ -353,7 +394,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 			pcl::PointCloud<pcl::PointXYZ>::Ptr temX (new pcl::PointCloud<pcl::PointXYZ>);
 
 			pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_p (new pcl::PointCloud<pcl::PointXYZ>);
-			/*
+
 			//Cut a box
 			pcl::PointNormal pMin,pMax;
 			pcl::getMinMax3D (*cloud_cluster_don,pMin,pMax);
@@ -393,141 +434,145 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 			pcl::toPCLPointCloud2(*cloud_filtered_xyz,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
 			pcl_conversions::fromPCL(temp_output,output);//convert to ROS data type
-			 */
+
 			//box
 
+			float xScale=(pMax.x-pMin.x);
+			float yScale=(pMax.y-pMin.y);
+			float zScale=(pMax.z-pMin.z);
+			abs(xScale);
+			abs(yScale);
+			abs(zScale);
 
-			/*
-			   float xScale=(pMax.x-pMin.x);
-			   float yScale=(pMax.y-pMin.y);
-			   float zScale=(pMax.z-pMin.z);
-			   abs(xScale);
-			   abs(yScale);
-			   abs(zScale);
-
-			   float xLoc= ((pMax.x-pMin.x)/2)+pMin.x;
-			   float yLoc= ((pMax.y-pMin.y)/2)+pMin.y;
-			   float zLoc= ((pMax.z-pMin.z)/2)+pMin.z;
+			float xLoc= ((pMax.x-pMin.x)/2)+pMin.x;
+			float yLoc= ((pMax.y-pMin.y)/2)+pMin.y;
+			float zLoc= ((pMax.z-pMin.z)/2)+pMin.z;
 			//Discard bad clusters
+			/*
 			bool filterBadClouds=true;//for debug purposes		
 			float zMidRoad = zMaxRoad -((zMaxRoad-zMinRoad)/2);
 			if((zLoc+0.0<zMidRoad && filterBadClouds)){
-			ROS_INFO("Discarding Cluster: Too low");
+				ROS_INFO("Discarding Cluster: Too low");
 			}else if(zScale<.23 && filterBadClouds){
-			ROS_INFO("Discarding Cluster: Too short");
-			printf("Zscale: %f, ZMid: %f",zScale,zMidRoad);
+				ROS_INFO("Discarding Cluster: Too short");
+				printf("Zscale: %f, ZMid: %f",zScale,zMidRoad);
 			}else if (yScale>7*xScale && filterBadClouds){
-			ROS_INFO("Discarding Cluster: Too narrow");
+				ROS_INFO("Discarding Cluster: Too narrow");
 			}else if (xScale>7*yScale && filterBadClouds){
-			ROS_INFO("Discarding Cluster: Too wide");
+				ROS_INFO("Discarding Cluster: Too wide");
 			}else if(zLoc-2>zMaxRoad && filterBadClouds){
-			ROS_INFO("Discarding Cluster: Too high off ground");		
+				ROS_INFO("Discarding Cluster: Too high off ground");		
 			}else if ((zScale>2*yScale || zScale>2*xScale )&& filterBadClouds){
-			ROS_INFO("Discarding Cluster: Too tall");
+				ROS_INFO("Discarding Cluster: Too tall");
 			}else if ((abs(xLoc)<1.5 && abs(yLoc)<1.5 )&& filterBadClouds){
-			ROS_INFO("Discarding Cluster: Too close");	
+				ROS_INFO("Discarding Cluster: Too close");	
 			}else{
+*/
+				//XYZ loc;
+				//XYZ scale;
+				//XYZ min;
+				//XYZ max;
+				//loc.x=xLoc;
+				//loc.y=yLoc;
+				//loc.z=zLoc;
+				//scale.x=xScale;
+				//scale.y=yScale;
+				//scale.z=zScale;
+				//min.x=pMax.x;
+				//min.y=pMax.y;
+				//min.z=pMax.z;
+				//max.x=pMax.x;
+				//max.y=pMax.y;
+				//max.z=pMax.z;				
+				//rviz_visual_tools::RvizVisualTools.deleteAllMarkers();
+				
+	//TODO MAKE MARKER BUILDER DO GAS PUCK
+	//marker=markerBuilder(j,loc,scale,min,max,0,cloud_cluster_don->width);
 
-			XYZ loc;
-			XYZ scale;
-			XYZ min;
-			XYZ max;
-			loc.x=xLoc;
-			loc.y=yLoc;
-			loc.z=zLoc;
-			scale.x=xScale;
-			scale.y=yScale;
-			scale.z=zScale;
-			min.x=pMax.x;
-			min.y=pMax.y;
-			min.z=pMax.z;
-			max.x=pMax.x;
-			max.y=pMax.y;
-			max.z=pMax.z;				
-			//rviz_visual_tools::RvizVisualTools.deleteAllMarkers();
-			marker=markerBuilder(j,loc,scale,min,max,0,cloud_cluster_don->width);
 
 
+				//markerArray.markers.push_back(marker);
 
-			markerArray.markers.push_back(marker);
-
-			lidar_utility_msgs::objectInfo obj_msg;
-
-			obj_msg.headerstamp = ros::Time::now();
-			obj_msg.id = j;
-			obj_msg.xLoc=xLoc;
-			obj_msg.yLoc=yLoc;
-			obj_msg.zLoc=zLoc;
-			obj_msg.distance= sqrt((xLoc*xLoc)+(yLoc*yLoc));
-			obj_msg.heading=0;
-			obj_msg.xMax=max.x;
-			obj_msg.xMin=min.x;
-			obj_msg.yMax=max.y;
-			obj_msg.yMin=min.y;
-			obj_msg.zMax=max.z;
-			obj_msg.zMin=min.z;
-			obj_msg.type=marker.text;
-			msg_pub.publish(obj_msg);
-			*/
-
-				/*aaaaaaaaaaaaaaaaaaaaaaaaaaaa
-				  switch(cloudNum){
-				  case 0:
-				  cl0_pub.publish (output);
-				  break;
-				  case 1:
-				  cl1_pub.publish (output);
-				  break;
-				  case 2:
-				  cl2_pub.publish (output);
-				  break;
-				  case 3:
-				  cl3_pub.publish (output);
-				  break;
-				  case 4:
-				  cl4_pub.publish (output);
-				  break;
-				  case 5:
-				  cl5_pub.publish (output);
-				  break;
-				  case 6:
-				  cl6_pub.publish (output);
-				  break;
-				  case 7:
-				  cl7_pub.publish (output);
-				  break;
-				  case 8:
-				  cl8_pub.publish (output);
-				  break;
-				  case 9:
-				  cl9_pub.publish (output);
-				  break;
-				  default:
-				  ROS_INFO("ERR: More clusters than available pc2 topics.");
-				//cloudNum=-1;
-				break;
+				//lidar_utility_msgs::objectInfo obj_msg;
+//custom msg garbage TODO REPLACE WITH POSE MSG
+/*
+				obj_msg.headerstamp = ros::Time::now();
+				obj_msg.id = j;
+				obj_msg.xLoc=xLoc;
+				obj_msg.yLoc=yLoc;
+				obj_msg.zLoc=zLoc;
+				obj_msg.distance= sqrt((xLoc*xLoc)+(yLoc*yLoc));
+				obj_msg.heading=0;
+				obj_msg.xMax=max.x;
+				obj_msg.xMin=min.x;
+				obj_msg.yMax=max.y;
+				obj_msg.yMin=min.y;
+				obj_msg.zMax=max.z;
+				obj_msg.zMin=min.z;
+				obj_msg.type=marker.text;
+				msg_pub.publish(obj_msg);
+*/
+				ROS_INFO("AT START OF CL SWITCH");
+				switch(cloudNum){
+					case 0:
+					ROS_INFO("CL0");
+						cl0_pub.publish (output);
+						break;
+					case 1:
+					ROS_INFO("CL1");
+						cl1_pub.publish (output);
+						break;
+					case 2:
+						cl2_pub.publish (output);
+						break;
+					case 3:
+						cl3_pub.publish (output);
+						break;
+					case 4:
+						cl4_pub.publish (output);
+						break;
+					case 5:
+						cl5_pub.publish (output);
+						break;
+					case 6:
+						cl6_pub.publish (output);
+						break;
+					case 7:
+						cl7_pub.publish (output);
+						break;
+					case 8:
+						cl8_pub.publish (output);
+						break;
+					case 9:
+						cl9_pub.publish (output);
+						break;
+					default:
+						ROS_INFO("ERR: More clusters than available pc2 topics.");
+						//cloudNum=-1;
+						break;
 				}
 				cloudNum++;
-				}
-				if(mode==1){
-				}
-
-				vis_pub.publish(markerArray);
+			//}//else?
+			if(mode==1){
+			}
 
 
-
-				markerID=cloudNum;
-				}
-
-				ros::Time end =ros::Time::now();
-				float duration=end.toSec() - begin.toSec();
-				ROS_INFO("%s: Out of callback. Duration: %f",nodeName.c_str(),duration);
-				//ROS_INFO(duration);
+			//TODO fix vis pub for single marker or keep array and add only one
+			//also add pose not marker senter at pose not cloud
+			//vis_pub.publish(markerArray);
 
 
-				//=====don
-				 */
-	}
+
+			markerID=cloudNum;
+		}
+
+	ros::Time end =ros::Time::now();
+	float duration=end.toSec() - begin.toSec();
+	ROS_INFO("%s: Out of callback. Duration: %f",nodeName.c_str(),duration);
+	//ROS_INFO(duration);
+		//=====don
+}	
+
 	if(mode==4){
 
 
@@ -642,7 +687,17 @@ main (int argc, char** argv)
 	//ros::Subscriber sub2 = nh.subscribe(sTopic2.c_str(), 1, message_cb);
 	//}
 	//ros::Subscriber sub3 = nh.subscribe("lidar_utility_settings", 1, settings_cb);
-
+	//cluster publishers
+	cl0_pub = nh.advertise<sensor_msgs::PointCloud2> ("cl0", 1);
+	cl1_pub = nh.advertise<sensor_msgs::PointCloud2> ("cl1", 1);
+	cl2_pub = nh.advertise<sensor_msgs::PointCloud2> ("cl2", 1);
+	cl3_pub = nh.advertise<sensor_msgs::PointCloud2> ("cl3", 1);
+	cl4_pub = nh.advertise<sensor_msgs::PointCloud2> ("cl4", 1);
+	cl5_pub = nh.advertise<sensor_msgs::PointCloud2> ("cl5", 1);
+	cl6_pub = nh.advertise<sensor_msgs::PointCloud2> ("cl6", 1);
+	cl7_pub = nh.advertise<sensor_msgs::PointCloud2> ("cl7", 1);
+	cl8_pub = nh.advertise<sensor_msgs::PointCloud2> ("cl8", 1);
+	cl9_pub = nh.advertise<sensor_msgs::PointCloud2> ("cl9", 1);
 	ros::spin();
 }		
 

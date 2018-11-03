@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   lidar_utility_msgs
   geometry_msgs
+
 )
 
 #test
