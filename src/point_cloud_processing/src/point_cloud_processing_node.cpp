@@ -290,6 +290,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
       exit (EXIT_FAILURE);
     }
 
+
     // Compute DoN
     don.computeFeature (*doncloud);
 
