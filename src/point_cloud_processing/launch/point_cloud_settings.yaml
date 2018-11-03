@@ -22,10 +22,10 @@ zTrans: 0.0
 
 don_scale1: 0.05
 don_scale2: 0.1
-don_threshold: 0.5
+don_threshold: 0.01
 don_segradius: 0.05
 
-don_minClusterSize: 30000
+don_minClusterSize: 10000
 don_maxClusterSize: 80000
 
 statOutlier_meanK: 150
