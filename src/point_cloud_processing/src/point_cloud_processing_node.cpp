@@ -209,6 +209,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   }
   if (mode==3||mode==4){//don or all
     ROS_INFO("PCP: DoN");
+	ROS_INFO("---------------------------------------------------------------");
     ros::Time begin = ros::Time::now();
     //-----don
 
