@@ -77,12 +77,12 @@ static double segradius=.5;//segment scene into clusters with given distance tol
 static double minClusterSize=50;
 static double maxClusterSize=80000;
 
-static float leaf_setting=.01;
-static float setMaxIterations_setting=100;
-static float setDistanceThreshold_setting=.02;
-static float setClusterTolerance_setting=.325;
-static float setMinClusterSize_setting=100;
-static float setMaxClusterSize_setting=200000;//default 40000 0 for test
+static float leafSize=.01;
+static float maxIterations=100;
+static float distanceThreshold=.02;
+static float clusterTollerance=.325;
+//static float minClusterSize=100;
+//static float maxClusterSize=200000;//default 40000 0 for test
 
 
 
@@ -125,7 +125,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 	pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);//convert PCLPC2 to PCLXYZ
 
 
-	if(mode==0||mode==4){//passThrough or all
+	if(mode==0){//passThrough 
 		ROS_INFO("PCP: passThrough");
 		pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
 		pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
@@ -166,7 +166,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 		pc2_pub.publish (output);// Publish the data.
 
 	}
-	if(mode==1||mode==4){//outlerRemoval or all
+	if(mode==1){//outlerRemoval
 		ROS_INFO("PCP: outlierRemoval");
 		// Create a container for the data and filtered data.
 		pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
@@ -189,7 +189,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 		pc2_pub.publish (output);
 
 	}
-	if (mode==2||mode==4){//transform or all
+	if (mode==2){//transform
 		ROS_INFO("PCP: transform");	
 		ros::Time begin = ros::Time::now();
 
@@ -222,7 +222,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 		}
 
 	}
-	if (mode==3||mode==4){//don or all
+	if (mode==3){//don
 		ROS_INFO("PCP: DoN");
 		ros::Time begin = ros::Time::now();
 		//-----don
@@ -516,7 +516,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 			// Create the filtering object: downsample the dataset using a leaf size of 1cm
 			pcl::VoxelGrid<pcl::PointXYZ> vg;
 			vg.setInputCloud (temp_cloud);
-			vg.setLeafSize (leaf_setting, leaf_setting, leaf_setting);//default (0.01f, 0.01f, 0.01f)//SETTING
+			vg.setLeafSize (leafSize, leafSize, leafSize);//default (0.01f, 0.01f, 0.01f)//SETTING
 			vg.filter (*cloud_filtered);
 			std::cout << "PointCloud after filtering has: " << cloud_filtered->points.size ()  << " data points." << std::endl; //*
 			// Create the segmentation object for the planar model and set all the parameters
@@ -528,8 +528,8 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 			seg.setOptimizeCoefficients (true);
 			seg.setModelType (pcl::SACMODEL_PLANE);
 			seg.setMethodType (pcl::SAC_RANSAC);
-			seg.setMaxIterations (setMaxIterations_setting);//SETTING
-			seg.setDistanceThreshold (setDistanceThreshold_setting);//SETTING
+			seg.setMaxIterations (maxIterations);//SETTING
+			seg.setDistanceThreshold (distanceThreshold);//SETTING
 
 			int i=0, nr_points = (int) cloud_filtered->points.size ();
 			while (cloud_filtered->points.size () > 0.3 * nr_points)
@@ -566,9 +566,9 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 		tree->setInputCloud (cloud_filtered);
 		std::vector<pcl::PointIndices> cluster_indices;
 		pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-		ec.setClusterTolerance (setClusterTolerance_setting); // 2cm//SETTING
-		ec.setMinClusterSize (setMinClusterSize_setting);//SETTING
-		ec.setMaxClusterSize (setMaxClusterSize_setting);//SETTING
+		ec.setClusterTolerance (clusterTollerance); // 2cm//SETTING
+		ec.setMinClusterSize (minClusterSize);//SETTING
+		ec.setMaxClusterSize (maxClusterSize);//SETTING
 		ec.setSearchMethod (tree);
 		ec.setInputCloud (cloud_filtered);
 		ec.extract (cluster_indices);
@@ -648,6 +648,12 @@ main (int argc, char** argv)
 
 	nh.getParam("settings/don_minClusterSize",minClusterSize);
 	nh.getParam("settings/don_maxClusterSize",maxClusterSize);
+	
+
+	nh.getParam("settings/euc_leafSize",leafSize);
+	nh.getParam("settings/euc_maxIterations",maxIterations);
+	nh.getParam("settings/euc_distancethreshold",distanceThreshold);
+	nh.getParam("settings/euc_clusterTollerance",clusterTollerance);
 	//set parameters on new name
 	const std::string subscriberParamName(nodeName + "/subscriber");
 	const std::string subscriberParamName2(nodeName + "/msgSubscriber");
@@ -716,7 +722,7 @@ main (int argc, char** argv)
 		mode=2;
 	}else if(myMode=="3"||myMode=="don"||myMode=="D"){
 		mode=3;
-	}else if(myMode=="4"||myMode=="all"||myMode=="E"){
+	}else if(myMode=="4"||myMode=="euc"||myMode=="E"){
 		mode=4;
 	}
 
