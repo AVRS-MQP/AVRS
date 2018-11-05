@@ -123,7 +123,32 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 	pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
 	pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
 	pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);//convert PCLPC2 to PCLXYZ
+if (mode==-1){
+		ROS_INFO("PCP: leaf");	
+//NEW CONVERSION
+		pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
+		pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
+		pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);//create PCLXYZ
+		pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);//convert PCLPC2 to PCLXYZ
+		//euclidian cluster extraxion
+		//these were moved here for scope of mode
+		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
+		//ddd pcl::PCDWriter writer;
+		
+			// Create the filtering object: downsample the dataset using a leaf size of 1cm
+			pcl::VoxelGrid<pcl::PointXYZ> vg;
+			vg.setInputCloud (temp_cloud);
+			vg.setLeafSize (leafSize, leafSize, leafSize);//default (0.01f, 0.01f, 0.01f)//SETTING
+			vg.filter (*cloud_filtered);
 
+std::cout << "PointCloud after filtering has: " << cloud_filtered->points.size ()  << " data points." << std::endl;
+
+sensor_msgs::PointCloud2 output;//create output container
+		pcl::PCLPointCloud2 temp_output;//create PCLPC2
+		pcl::toPCLPointCloud2(*cloud_filtered,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
+		pcl_conversions::fromPCL(temp_output,output);//convert to ROS data type
+		pc2_pub.publish (output);// Publish the data.
+}
 
 	if(mode==0){//passThrough 
 		ROS_INFO("PCP: passThrough");
@@ -501,7 +526,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 
 	}
 	if(mode==4){
-		int m2=1;
+
 
 		//NEW CONVERSION
 		pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
@@ -511,14 +536,22 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 		//euclidian cluster extraxion
 		//these were moved here for scope of mode
 		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
-		pcl::PCDWriter writer;
-		if(m2==1){
-			// Create the filtering object: downsample the dataset using a leaf size of 1cm
+
+                cloud_filtered=temp_cloud;
+
+//		pcl::PCDWriter writer;
+		
+			// Create the filtering object: downsample the dataset using a leaf size of 1cmi
+/*
 			pcl::VoxelGrid<pcl::PointXYZ> vg;
 			vg.setInputCloud (temp_cloud);
 			vg.setLeafSize (leafSize, leafSize, leafSize);//default (0.01f, 0.01f, 0.01f)//SETTING
 			vg.filter (*cloud_filtered);
 			std::cout << "PointCloud after filtering has: " << cloud_filtered->points.size ()  << " data points." << std::endl; //*
+
+*/
+
+
 			// Create the segmentation object for the planar model and set all the parameters
 			pcl::SACSegmentation<pcl::PointXYZ> seg;
 			pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
@@ -558,9 +591,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 				extract.filter (*cloud_f);
 				*cloud_filtered = *cloud_f;
 			}
-		}else if(m2==2||m2==3){
-			cloud_filtered=temp_cloud;
-		}
+	
 		// Creating the KdTree object for the search method of the extraction
 		pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
 		tree->setInputCloud (cloud_filtered);
@@ -745,7 +776,9 @@ main (int argc, char** argv)
 	nh.deleteParam(publisherParamName);
 	nh.deleteParam(modeParamName);
 	nh.deleteParam(subscriberParamName2);
-	if(myMode=="0"||myMode=="passThrough"||myMode=="A"){
+	if(myMode=="-1"||myMode=="leaf"||myMode=="Z"){
+	mode=-1;
+	}else if(myMode=="0"||myMode=="passThrough"||myMode=="A"){
 		mode=0;
 	}else if(myMode=="1"||myMode=="outlierRemoval"||myMode=="B"){
 		mode=1;

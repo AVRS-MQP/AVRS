@@ -40,7 +40,7 @@ don_minClusterSize: 500
 don_maxClusterSize: 80000
 
 
-euc_leafSize: .04
+euc_leafSize: .01
 euc_maxIterations: 100
 euc_distancethreshold: .1
 euc_clusterTollerance: .001
