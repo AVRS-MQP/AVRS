@@ -572,7 +572,8 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 		ec.setSearchMethod (tree);
 		ec.setInputCloud (cloud_filtered);
 		ec.extract (cluster_indices);
-		int j = 0;
+		int cloudNum = 0;
+
 		for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
 		{
 			pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
@@ -582,25 +583,55 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 			cloud_cluster->height = 1;
 			cloud_cluster->is_dense = true;
 
-			std::cout << "ObjDetEuc: PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
+			std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
 			std::stringstream ss;
-			ss << "cloud_cluster_" << j << ".pcd";
-			writer.write<pcl::PointXYZ> (ss.str (), *cloud_cluster, false); //*
-			j++;
-			pcl::CentroidPoint<pcl::PointXYZ> centroid;//add cluster centroid to array
 
-			for (std::vector<int>::const_iterator pit2 = it->indices.begin (); pit2 != it->indices.end (); ++pit2){
-				centroid.add(pcl::PointXYZ(cloud_filtered->points[*pit2].x,cloud_filtered->points[*pit2].y,cloud_filtered->points[*pit2].z));
-			}
-			pcl::PointXYZ c1;
-			centroid.get (c1);
 
-			//convert back
 			sensor_msgs::PointCloud2 output;//create output container
 			pcl::PCLPointCloud2 temp_output;//create PCLPC2
 			pcl::toPCLPointCloud2(*cloud_filtered,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
 			pcl_conversions::fromPCL(temp_output,output);//convert to ROS data type
-			pc2_pub.publish (output);// Publish the data.
+			//pc2_pub.publish (output);// Publish the data.
+
+			switch(cloudNum){
+				case 0:
+					ROS_INFO("CL0");
+					cl0_pub.publish (output);
+					break;
+				case 1:
+					ROS_INFO("CL1");
+					cl1_pub.publish (output);
+					break;
+				case 2:
+					cl2_pub.publish (output);
+					break;
+				case 3:
+					cl3_pub.publish (output);
+					break;
+				case 4:
+					cl4_pub.publish (output);
+					break;
+				case 5:
+					cl5_pub.publish (output);
+					break;
+				case 6:
+					cl6_pub.publish (output);
+					break;
+				case 7:
+					cl7_pub.publish (output);
+					break;
+				case 8:
+					cl8_pub.publish (output);
+					break;
+				case 9:
+					cl9_pub.publish (output);
+					break;
+				default:
+					ROS_INFO("ERR: More clusters than available pc2 topics.");
+					//cloudNum=-1;
+					break;
+			}
+			cloudNum++;
 
 
 
@@ -648,7 +679,7 @@ main (int argc, char** argv)
 
 	nh.getParam("settings/don_minClusterSize",minClusterSize);
 	nh.getParam("settings/don_maxClusterSize",maxClusterSize);
-	
+
 
 	nh.getParam("settings/euc_leafSize",leafSize);
 	nh.getParam("settings/euc_maxIterations",maxIterations);
