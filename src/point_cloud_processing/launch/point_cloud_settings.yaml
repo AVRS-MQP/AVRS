@@ -21,9 +21,9 @@ yTrans: 0.0
 zTrans: 0.0
 
 don_scale1: 0.05
-don_scale2: .77
-don_threshold: .005
-don_segradius: 0.3
+don_scale2: .1
+don_threshold: .05
+don_segradius: 0.02
 
 
 #don_scale1: 0.05
@@ -36,14 +36,14 @@ don_segradius: 0.3
 #don_threshold: 0.05
 #don_segradius: 0.1
 
-don_minClusterSize: 500
-don_maxClusterSize: 80000
+don_minClusterSize: 50000
+don_maxClusterSize: 200000
 
 
 euc_leafSize: .01
 euc_maxIterations: 100
-euc_distancethreshold: .1
-euc_clusterTollerance: .001
+euc_distancethreshold: .02
+euc_clusterTollerance: .02
 
 statOutlier_meanK: 150
 statOutlier_stdDev: .1
@@ -58,4 +58,6 @@ don_Threshold: .05
 don_Segradius: 1
 don_MinClusterSize: 200
 don_maxClusterSize: 2000
+
+testvar: 5
 

@@ -526,8 +526,8 @@ sensor_msgs::PointCloud2 output;//create output container
 
 	}
 	if(mode==4){
-
-
+		ROS_INFO("PCP: euc");
+int doLeaf =0;
 		//NEW CONVERSION
 		pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
 		pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
@@ -541,16 +541,17 @@ sensor_msgs::PointCloud2 output;//create output container
 
 //		pcl::PCDWriter writer;
 		
+if(doLeaf==1){
 			// Create the filtering object: downsample the dataset using a leaf size of 1cmi
-/*
+
 			pcl::VoxelGrid<pcl::PointXYZ> vg;
 			vg.setInputCloud (temp_cloud);
 			vg.setLeafSize (leafSize, leafSize, leafSize);//default (0.01f, 0.01f, 0.01f)//SETTING
 			vg.filter (*cloud_filtered);
 			std::cout << "PointCloud after filtering has: " << cloud_filtered->points.size ()  << " data points." << std::endl; //*
 
-*/
 
+}
 
 			// Create the segmentation object for the planar model and set all the parameters
 			pcl::SACSegmentation<pcl::PointXYZ> seg;
@@ -604,9 +605,10 @@ sensor_msgs::PointCloud2 output;//create output container
 		ec.setInputCloud (cloud_filtered);
 		ec.extract (cluster_indices);
 		int cloudNum = 0;
-
+ROS_WARN("test warning");
 		for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
 		{
+			ROS_INFO("HERE AAA");
 			pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
 			for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
 				cloud_cluster->points.push_back (cloud_filtered->points[*pit]); //*
@@ -623,7 +625,8 @@ sensor_msgs::PointCloud2 output;//create output container
 			pcl::toPCLPointCloud2(*cloud_filtered,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
 			pcl_conversions::fromPCL(temp_output,output);//convert to ROS data type
 			//pc2_pub.publish (output);// Publish the data.
-
+			ROS_INFO("HERE A");
+			ROS_DEBUG("test aa");
 			switch(cloudNum){
 				case 0:
 					ROS_INFO("CL0");

@@ -8,6 +8,6 @@
   <include file="$(find freenect_launch)/launch/freenect.launch">
   </include>
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find master_launcher)/rviz/simple_kinect.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d ~/AVRS_ws/rviz/CLN_4.rviz" />
 
 </launch>
