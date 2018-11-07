@@ -7,20 +7,10 @@
 //C
 #include <stdio.h>
 #include <iostream>
+
+#include <geometry_msgs/PoseStamped.h>
+
 //custom msgs
-//PCL specific includes
-#include <pcl/common/common.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/filters/passthrough.h>
-#include <pcl/filters/extract_indices.h>
-#include <pcl/registration/boost.h>
-#include <pcl/correspondence.h>
-#include <pcl/visualization/pcl_visualizer.h>
 
 
 //ROS_INTO 
@@ -36,10 +26,9 @@ static std::string nodeName("temp_name");
 static float xMinf, xMaxf, yMinf, yMaxf, zMinf, zMaxf;
 
 //publishers
-ros::Publisher pc2_pub;
+ros::Publisher poseResult;
 
-int debugLevel =2;
-void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
+void timer_cb (const ros::TimerEvent&)
 {
   
 }
@@ -132,11 +121,11 @@ main (int argc, char** argv)
   }
 
   // Create a ROS subscriber for the input point cloud
-  ros::Subscriber sub = nh.subscribe (sTopic.c_str(), 1, cloud_cb);
+    ros::Timer timer1 = nh.createTimer(ros::Duration(0.1), timer_cb);
 
   ROS_INFO("%s: Subscribing to %s",nodeName.c_str(),sTopic.c_str());
   // Create a ROS publisher for the output point cloud
-  pc2_pub = nh.advertise<sensor_msgs::PointCloud2> (pTopic, 1);
+  poseResult = nh.advertise<geometry_msgs::PoseStamped> (pTopic, 1);
   ROS_INFO("%s: Publishing to %s",nodeName.c_str(),pTopic.c_str());
 
   ros::spin();
