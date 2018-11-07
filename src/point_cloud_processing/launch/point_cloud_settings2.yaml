@@ -56,8 +56,7 @@ don_Scale1: .3
 don_Scale2: 20
 don_Threshold: .05
 don_Segradius: 1
-don_MinClusterSize: 200
-don_maxClusterSize: 2000
+
 
 testvar: 5
 
