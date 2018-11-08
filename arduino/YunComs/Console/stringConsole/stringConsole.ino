@@ -96,12 +96,5 @@ void vehicle_type(char sel) {
     strcpy(chargeSel, charge3);
     chgLvl = lvl2; //May also support level 3, needs confirmation
   }
-//Placeholder
-//Placeholder 2: Electric Boogalo
-//Back at it
-//Username sadness
-//Please work
-//Tears part 18.5
-//Tears part 19
-//Broken again
+
 }

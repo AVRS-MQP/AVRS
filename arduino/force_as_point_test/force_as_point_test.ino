@@ -6,16 +6,12 @@
 #include <ros.h>
 #include <std_msgs/String.h>
 #include <ros/time.h>
-#include <sensor_msgs/Range.h>
-#include <force_msgs/PointForce.h>
-#include <force_msgs/PointForceArray.h>
+#include <geometry_msgs/Point32.h>
 
 ros::NodeHandle  nh;
 
-force_msgs::PointForce ForceA_msg;
-force_msgs::PointForce ForceB_msg;
-force_msgs::PointForce ForceC_msg;
-force_msgs::PointForceArray ForceArray_msg;
+geometry_msgs::Point32 ForceA_msg;
+
 
 ros::Publisher pub_force( "force_data", &ForceA_msg);
 
@@ -37,14 +33,15 @@ void setup()
 
 
 
-  ForceA_msg.header.frame_id = frameid2;
-  ForceB_msg.header.frame_id = frameid2;
-  ForceC_msg.header.frame_id = frameid2;
-
+  //ForceA_msg.header.frame_id = frameid2;
+  //ForceB_msg.header.frame_id = frameid2;
+  //ForceC_msg.header.frame_id = frameid2;
+/*
   //load cell a location
   ForceA_msg.xLoc = 0;
   ForceA_msg.yLoc = 2;
   ForceA_msg.zLoc = 0;
+  
   //load cell b location
   ForceB_msg.xLoc = 1.732;
   ForceB_msg.yLoc = -1;
@@ -53,18 +50,19 @@ void setup()
   ForceC_msg.xLoc = -1.732;
   ForceC_msg.yLoc = -1;
   ForceC_msg.zLoc = 0;
+  */
 
 }
-float range = 0;
 
 void loop()
 {
 
   //load cell a location
-  ForceA_msg.header.stamp =nh.now();
-  ForceA_msg.xForce = 0;
-  ForceA_msg.yForce = 0;
-  ForceA_msg.zForce = -5;
+  //ForceA_msg.header.stamp =nh.now();
+  ForceA_msg.x = 0;
+  ForceA_msg.y = 0;
+  ForceA_msg.z = -5;
+  /*
   //load cell b location
     ForceB_msg.header.stamp =nh.now();
   ForceB_msg.xForce = 0;
@@ -75,11 +73,11 @@ void loop()
   ForceC_msg.xForce = 0;
   ForceC_msg.yForce = 0;
   ForceC_msg.zForce = -5;
-
-  ForceArray_msg.header.stamp =nh.now();
-  ForceArray_msg.PointForces[0] = ForceA_msg;
-  ForceArray_msg.PointForces[1] = ForceB_msg;
-  ForceArray_msg.PointForces[2] = ForceC_msg;
+*/
+  //ForceArray_msg.header.stamp =nh.now();
+  //ForceArray_msg.PointForces[0] = ForceA_msg;
+ // ForceArray_msg.PointForces[1] = ForceB_msg;
+  //ForceArray_msg.PointForces[2] = ForceC_msg;
 
 
   //ForceArray_msg.PointForces.push_back(ForceA_msg);
@@ -89,5 +87,5 @@ void loop()
   pub_force.publish(&ForceA_msg);
 
   nh.spinOnce();
-  delay(400);//1000
+  delay(1000);//1000
 }
