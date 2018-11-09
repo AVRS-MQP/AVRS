@@ -80,18 +80,18 @@ void vehicle_callback(const ros::TimerEvent&)
   int main(int argc, char **argv) {
 
     ros::init(argc,argv, "Yun");
-    ros::NodeHandle n;
+    ros::NodeHandle nh;
 
     system("ssh root@vehiclesim.local 'telnet localhost 6571' 2>&1 | tee coms_out.txt");
     ++msgPend;	
 
-    msg_pub = n.advertise<coms_msgs::vehicle>("comsUplink", 1000);
+    msg_pub = nh.advertise<coms_msgs::vehicle>("comsUplink", 1000);
     ros::Rate loop_rate(10);
 
     int count = 0;
   
 
-    ros::Timer timer1 = n.createTimer(ros::Duration(0.1), vehicle_callback);
+    ros::Timer timer1 = nh.createTimer(ros::Duration(0.1), vehicle_callback);
 
     ros::spinOnce();
     loop_rate.sleep();

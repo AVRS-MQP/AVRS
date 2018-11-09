@@ -1,0 +1,13 @@
+<!--Launch file for nodelets-->
+<!--see readme section on launch files for details on how to use file-->
+<!--maintainer email="nxgamarra@gmail.com">Nikolas Gamarra</maintainer-->
+
+<launch>
+
+<!--Load settings as parameters from .yaml-->
+  
+  <node name="main" pkg="main" type="main_node" output="screen" >
+
+  </node>
+
+</launch>

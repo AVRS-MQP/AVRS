@@ -1,15 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(force_msgs)
+project(follow_joint_trajectory_msgs)
 
 find_package(catkin REQUIRED COMPONENTS message_generation std_msgs)
 
 add_message_files(
   DIRECTORY msg
   FILES
-  PointForce.msg
-  PointForceArray.msg
-  LoadCellForces32.msg
-  PointForce32.msg
+  JointTrajectory.msg
+  JointTrajectoryPoint.msg
 )
 generate_messages(DEPENDENCIES std_msgs)
 
