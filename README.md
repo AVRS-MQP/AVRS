@@ -21,4 +21,9 @@ git log | grep Author: | sort | uniq
 git commit --author="niko1499 <nxgamarra@gmail.com>" -m "commit as niko test" -a
 
 
+to visualize the robot run
+
+roslaunch abb_irb1600_support robot_state_visualize_irb1600_6_12.launch J23_coupled:="false" robot_ip:=192.168.100.100 
+
+
 
