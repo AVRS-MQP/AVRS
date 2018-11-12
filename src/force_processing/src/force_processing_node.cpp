@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include <iostream>
 //custom msgs
-#include <force_msgs/PointForce.h>
-#include <force_msgs/PointForceArray.h>
+#include <force_msgs/PointForce.h> // 6 fields: x, y, z location then x, y, z force
+#include <force_msgs/PointForceArray.h> //Contains a number of PointForces 
 
 
 
@@ -29,12 +29,15 @@ static float xMinf, xMaxf, yMinf, yMaxf, zMinf, zMaxf;
 ros::Publisher force_pub;
 
 int debugLevel =2;
+
 void msg_cb (const force_msgs::PointForceArray force_array_msg)
 {
-  
+  float force1 = force_array_msg[0]; //TODO Change this message to match load cell outputs
+  float force2 = force_array_msg[1];
+  float force3 = force_array_msg[2];
 }
-  int
-main (int argc, char** argv)
+
+int main (int argc, char** argv)
 {
   //initialize default topics for subscribing and publishing
   const std::string defaultCloudSubscriber("cloud_pcd");
