@@ -1,0 +1,7 @@
+#! /usr/bin/env python
+
+import avrs_main.hello
+
+
+if __name__ == '__main__':
+    avrs_main.hello.say('my friend!')
