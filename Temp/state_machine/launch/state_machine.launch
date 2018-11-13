@@ -6,7 +6,7 @@
 
 <!--Load settings as parameters from .yaml-->
   
-  <node name="main" pkg="main" type="main_node" output="screen" >
+  <node name="s" pkg="state_machine" type="state_machine_node" output="screen" >
 
   </node>
 

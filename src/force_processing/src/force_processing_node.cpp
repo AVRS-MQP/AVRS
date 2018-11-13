@@ -32,9 +32,7 @@ int debugLevel =2;
 
 void msg_cb (const force_msgs::PointForceArray force_array_msg)
 {
-  float force1 = force_array_msg[0]; //TODO Change this message to match load cell outputs
-  float force2 = force_array_msg[1];
-  float force3 = force_array_msg[2];
+
 }
 
 int main (int argc, char** argv)

@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(main)
+project(my_pkg)
+
+
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -10,6 +12,8 @@ project(main)
 find_package(catkin REQUIRED COMPONENTS
   rospy
 )
+
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -118,6 +122,10 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+#niko
+catkin_install_python(PROGRAMS bin/hello
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/main.cpp
@@ -196,5 +204,4 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-catkin_install_python(PROGRAMS bin/hello
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
