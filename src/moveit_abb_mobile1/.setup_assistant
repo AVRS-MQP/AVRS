@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: abb_irb1600_support
+    relative_path: urdf/irb1600_6_12.xacro
+    xacro_args: "--inorder "
+  SRDF:
+    relative_path: config/abb_irb1600_6_12.srdf
+  CONFIG:
+    author_name: AVRS-MQP
+    author_email: nxgamarra@wpi.edu
+    generated_timestamp: 1542313967
