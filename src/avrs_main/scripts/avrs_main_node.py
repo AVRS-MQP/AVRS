@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 AVRS-MQP
 Main state machine and moveit coordinator
@@ -10,16 +12,31 @@ import rospy
 import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
+from geometry_msgs.msg import PoseStamped
 from math import pi
 from std_msgs.msg import String
-from moveit_commander.conversions import pose_to_list
+#from moveit_commander.conversions import pose_to_list
 
-class robot(object):
+class Robot (object):
     def __init__(self):
+
+        # super(Robot, self).__init__()
+        #
+        # moveit_commander.roscpp_initialize(sys.argv)
+        # rospy.init_node('robot', anonymous=True)
+
+        # robot = moveit_commander.RobotCommander()
+
         rospy.Subscriber('/flap_pose', PoseStamped, self.pose_cb, queue_size=1) # handle nav goal events
 
         group_name = "abb_arm"
         move_group = moveit_commander.MoveGroupCommander(group_name)
+
+        display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path',
+                                                       moveit_msgs.msg.DisplayTrajectory,
+                                                       queue_size=20)
+
+        self.move_group = move_group
 
     def pose_cb(self):
         print("IN POSE CB")
@@ -30,12 +47,12 @@ class robot(object):
         # reason not to.
         move_group = self.move_group
 
-        ## BEGIN_SUB_TUTORIAL plan_to_joint_state
-        ##
-        ## Planning to a Joint Goal
-        ## ^^^^^^^^^^^^^^^^^^^^^^^^
-        ## The Panda's zero configuration is at a `singularity <https://www.quora.com/Robotics-What-is-meant-by-kinematic-singularity>`_ so the first
-        ## thing we want to do is move it to a slightly better configuration.
+        # BEGIN_SUB_TUTORIAL plan_to_joint_state
+        #
+        # Planning to a Joint Goal
+        # ^^^^^^^^^^^^^^^^^^^^^^^^
+        # The Panda's zero configuration is at a `singularity <https://www.quora.com/Robotics-What-is-meant-by-kinematic-singularity>`_ so the first
+        # thing we want to do is move it to a slightly better configuration.
         # We can get the joint values from the group and adjust some of the values:
         joint_goal = move_group.get_current_joint_values()
         joint_goal[0] = 0
@@ -53,7 +70,7 @@ class robot(object):
         # Calling ``stop()`` ensures that there is no residual movement
         move_group.stop()
 
-        ## END_SUB_TUTORIAL
+        # END_SUB_TUTORIAL
 
         # For testing:
         current_joints = move_group.get_current_joint_values()
@@ -66,12 +83,12 @@ class robot(object):
         # reason not to.
         move_group = self.move_group
 
-        ## BEGIN_SUB_TUTORIAL plan_to_pose
-        ##
-        ## Planning to a Pose Goal
-        ## ^^^^^^^^^^^^^^^^^^^^^^^
-        ## We can plan a motion for this group to a desired pose for the
-        ## end-effector:
+        # BEGIN_SUB_TUTORIAL plan_to_pose
+        #
+        # Planning to a Pose Goal
+        # ^^^^^^^^^^^^^^^^^^^^^^^
+        # We can plan a motion for this group to a desired pose for the
+        # end-effector:
         pose_goal = geometry_msgs.msg.Pose()
         pose_goal.orientation.w = 1.0
         pose_goal.position.x = 0.4
@@ -80,7 +97,7 @@ class robot(object):
 
         move_group.set_pose_target(pose_goal)
 
-        ## Now, we call the planner to compute the plan and execute it.
+        # Now, we call the planner to compute the plan and execute it.
         plan = move_group.go(wait=True)
         # Calling `stop()` ensures that there is no residual movement
         move_group.stop()
@@ -88,7 +105,7 @@ class robot(object):
         # Note: there is no equivalent function for clear_joint_value_targets()
         move_group.clear_pose_targets()
 
-        ## END_SUB_TUTORIAL
+        # END_SUB_TUTORIAL
 
         # For testing:
         # Note that since this section of code will not be included in the tutorials
@@ -103,14 +120,14 @@ class robot(object):
         # reason not to.
         move_group = self.move_group
 
-        ## BEGIN_SUB_TUTORIAL plan_cartesian_path
-        ##
-        ## Cartesian Paths
-        ## ^^^^^^^^^^^^^^^
-        ## You can plan a Cartesian path directly by specifying a list of waypoints
-        ## for the end-effector to go through. If executing  interactively in a
-        ## Python shell, set scale = 1.0.
-        ##
+        # BEGIN_SUB_TUTORIAL plan_cartesian_path
+        #
+        # Cartesian Paths
+        # ^^^^^^^^^^^^^^^
+        # You can plan a Cartesian path directly by specifying a list of waypoints
+        # for the end-effector to go through. If executing  interactively in a
+        # Python shell, set scale = 1.0.
+        #
         waypoints = []
 
         wpose = move_group.get_current_pose().pose
@@ -137,7 +154,7 @@ class robot(object):
         # Note: We are just planning, not asking move_group to actually move the robot yet:
         return plan, fraction
 
-        ## END_SUB_TUTORIAL
+        # END_SUB_TUTORIAL
 
 
     def display_trajectory(self, plan):
@@ -147,24 +164,24 @@ class robot(object):
         robot = self.robot
         display_trajectory_publisher = self.display_trajectory_publisher
 
-        ## BEGIN_SUB_TUTORIAL display_trajectory
-        ##
-        ## Displaying a Trajectory
-        ## ^^^^^^^^^^^^^^^^^^^^^^^
-        ## You can ask RViz to visualize a plan (aka trajectory) for you. But the
-        ## group.plan() method does this automatically so this is not that useful
-        ## here (it just displays the same trajectory again):
-        ##
-        ## A `DisplayTrajectory`_ msg has two primary fields, trajectory_start and trajectory.
-        ## We populate the trajectory_start with our current robot state to copy over
-        ## any AttachedCollisionObjects and add our plan to the trajectory.
+        # BEGIN_SUB_TUTORIAL display_trajectory
+        #
+        # Displaying a Trajectory
+        # ^^^^^^^^^^^^^^^^^^^^^^^
+        # You can ask RViz to visualize a plan (aka trajectory) for you. But the
+        # group.plan() method does this automatically so this is not that useful
+        # here (it just displays the same trajectory again):
+        #
+        # A `DisplayTrajectory`_ msg has two primary fields, trajectory_start and trajectory.
+        # We populate the trajectory_start with our current robot state to copy over
+        # any AttachedCollisionObjects and add our plan to the trajectory.
         display_trajectory = moveit_msgs.msg.DisplayTrajectory()
         display_trajectory.trajectory_start = robot.get_current_state()
         display_trajectory.trajectory.append(plan)
         # Publish
         display_trajectory_publisher.publish(display_trajectory);
 
-        ## END_SUB_TUTORIAL
+        # END_SUB_TUTORIAL
 
 
     def execute_plan(self, plan):
@@ -173,22 +190,25 @@ class robot(object):
         # reason not to.
         move_group = self.move_group
 
-        ## BEGIN_SUB_TUTORIAL execute_plan
-        ##
-        ## Executing a Plan
-        ## ^^^^^^^^^^^^^^^^
-        ## Use execute if you would like the robot to follow
-        ## the plan that has already been computed:
+        # BEGIN_SUB_TUTORIAL execute_plan
+        #
+        # Executing a Plan
+        # ^^^^^^^^^^^^^^^^
+        # Use execute if you would like the robot to follow
+        # the plan that has already been computed:
         move_group.execute(plan, wait=True)
 
-        ## **Note:** The robot's current joint state must be within some tolerance of the
-        ## first waypoint in the `RobotTrajectory`_ or ``execute()`` will fail
-        ## END_SUB_TUTORIAL
+        # **Note:** The robot's current joint state must be within some tolerance of the
+        # first waypoint in the `RobotTrajectory`_ or ``execute()`` will fail
+        # END_SUB_TUTORIAL
 
-if __name__ == "__main__":
+def main():
     try:
-        robot.go_to_pose_goal()
-        robot.display_trajectory()
+        abb = Robot()
+        Robot.go_to_pose_goal()
+        Robot.display_trajectory()
     except rospy.ROSInterruptException:
         ROS_WARN("ROS INTERRUPT EXCEPTION")
 
+if __name__ == "__main__":
+    main()

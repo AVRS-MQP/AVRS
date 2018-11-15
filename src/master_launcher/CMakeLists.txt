@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   roscpp
   sensor_msgs
-  lidar_utility_msgs
 )
 
 #test
@@ -24,8 +23,8 @@ add_definitions(${PCL_DEFINITIONS})
 catkin_package()
 
 #PCL - niko
-add_executable(lidarUtility src/lidarUtility.cpp)
-target_link_libraries(lidarUtility ${catkin_LIBRARIES})
+#add_executable(lidarUtility src/lidarUtility.cpp) TODO FIX IF SRC ADDED ELSE MIGRATE LAUNCH
+#target_link_libraries(lidarUtility ${catkin_LIBRARIES})
 
 
 ## System dependencies are found with CMake's conventions

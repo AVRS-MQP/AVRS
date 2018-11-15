@@ -1,8 +1,8 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 
-#include <coms_msgs/vehicle.h>
-#include <coms_msgs/station.h>
+#include <coms_msgs/Vehicle.h>
+#include <coms_msgs/Station.h>
 
 #include <sstream>
 #include <iostream>
@@ -24,7 +24,7 @@ void vehicle_callback(const ros::TimerEvent&)
   myFile.open ("coms_out", std::ios::in | std::ios::ate);
 
 
-  coms_msgs::vehicle msg;
+  coms_msgs::Vehicle msg;
   msg.headerstamp = ros::Time::now();
 
   if (myFile.is_open()) { 
@@ -85,7 +85,7 @@ void vehicle_callback(const ros::TimerEvent&)
     system("ssh root@vehiclesim.local 'telnet localhost 6571' 2>&1 | tee coms_out.txt");
     ++msgPend;	
 
-    msg_pub = nh.advertise<coms_msgs::vehicle>("comsUplink", 1000);
+    msg_pub = nh.advertise<coms_msgs::Vehicle>("comsUplink", 1000);
     ros::Rate loop_rate(10);
 
     int count = 0;

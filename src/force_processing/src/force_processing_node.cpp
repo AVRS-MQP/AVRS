@@ -8,9 +8,10 @@
 #include <stdio.h>
 #include <iostream>
 //custom msgs
-#include <force_msgs/PointForce.h> // 6 fields: x, y, z location then x, y, z force
-#include <force_msgs/PointForceArray.h> //Contains a number of PointForces 
-
+//#include <force_msgs/PointForce.h> // 6 fields: x, y, z location then x, y, z force
+//#include <force_msgs/PointForceArray.h> //Contains a number of PointForces 
+#include <force_msgs/LoadCellForces32.h>
+#include <geometry_msgs/Vector3.h>
 
 
 //ROS_INTO 
@@ -30,7 +31,7 @@ ros::Publisher force_pub;
 
 int debugLevel =2;
 
-void msg_cb (const force_msgs::PointForceArray force_array_msg)
+void msg_cb (const force_msgs::LoadCellForces32 msg)
 {
 
 }
@@ -127,7 +128,7 @@ int main (int argc, char** argv)
 
   ROS_INFO("%s: Subscribing to %s",nodeName.c_str(),sTopic.c_str());
   // Create a ROS publisher for the output point cloud
-  force_pub = nh.advertise<force_msgs::PointForce> (pTopic, 1);
+  force_pub = nh.advertise<geometry_msgs::Vector3> (pTopic, 1);
   ROS_INFO("%s: Publishing to %s",nodeName.c_str(),pTopic.c_str());
 
   ros::spin();

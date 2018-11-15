@@ -1,0 +1,7 @@
+<launch>
+
+<node name="main" pkg="avrs_main" type="avrs_main_node.py" output="screen">
+    </node>
+</launch>
+
+	
