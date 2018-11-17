@@ -29,4 +29,16 @@ roslaunch abb_irb1600_6_12_moveit_config moveit_planning_execution.launch sim:=f
 
 
 
+Depends on
+
+ROS-I
+PCL
+Open CV
+MoveIt
+TRAC-IK Kinematics Solver
+http://docs.ros.org/kinetic/api/moveit_tutorials/html/doc/trac_ik/trac_ik_tutorial.html
+
+
+
+
 
