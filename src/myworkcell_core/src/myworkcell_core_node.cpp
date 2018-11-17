@@ -98,9 +98,7 @@ int main(int argc, char **argv)
 	// Plan for robot to move to part
 	move_group.setPoseReferenceFrame(base_frame);
 	move_group.setPoseTarget(move_target);
-	ROS_WARN("b.4");
 	//move_group.();	
 	move_group.move();
-	ROS_WARN("b.5");
 	ros::waitForShutdown();
 }
