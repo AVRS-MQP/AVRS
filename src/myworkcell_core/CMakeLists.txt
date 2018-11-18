@@ -10,7 +10,8 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf
-  
+  rviz_visual_tools
+  moveit_visual_tools
   moveit_ros_planning_interface
 )
 

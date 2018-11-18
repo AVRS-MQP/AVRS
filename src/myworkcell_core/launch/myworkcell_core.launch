@@ -1,0 +1,15 @@
+<!--Launch file for arm hardcoded motion-->
+<!--see readme section on launch files for details on how to use file-->
+<!--maintainer email="nxgamarra@gmail.com">Nikolas Gamarra</maintainer-->
+<launch>
+
+<!--Load settings as parameters from .yaml-->
+  <group ns="move_pose">
+    <rosparam command="load" file="$(find myworkcell_core)/launch/myworkcell_core_settings.yaml" />
+  </group>
+
+ <node name="myworkcell_core" pkg="myworkcell_core" type="myworkcell_core_node" output="screen">
+    
+  </node>
+
+</launch>
