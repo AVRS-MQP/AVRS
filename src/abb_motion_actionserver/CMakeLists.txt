@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(myworkcell_core)
+project(abb_motion_actionserver)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
@@ -62,12 +62,13 @@ find_package(catkin REQUIRED COMPONENTS
 #   Service2.srv
 # )
 
-## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+# Generate actions in the 'action' folder
+ add_action_files(
+   FILES
+   MoveRobot.action
+   MoveRobotPose.action
+   
+ )
 
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
