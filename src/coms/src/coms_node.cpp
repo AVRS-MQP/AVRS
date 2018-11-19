@@ -14,6 +14,7 @@ ros::Publisher msg_pub;
 
 int msgPend; //Number of messages waiting to be read
 bool readFlag; //New msg will not be read unless flag is low. Set low after last msg is processed
+
 void vehicle_callback(const ros::TimerEvent&)
 {
   ROS_INFO("Callback 1 triggered");
@@ -87,8 +88,13 @@ void vehicle_callback(const ros::TimerEvent&)
     ros::init(argc,argv, "Yun");
     ros::NodeHandle nh;
 
+    //Connect To Yun
     system("ssh root@vehiclesim.local 'telnet localhost 6571' 2>&1 | tee coms_out.txt");
-    ++msgPend;
+    ++msgPend; 
+    //ros::Duration(4).sleep(); //pause to make sure Yun is connected
+    //system("arduino"); //enter password to establish connection
+
+    //ros::Subscriber sub = nh.subscribe ("comsUplink", 1, vehicle_callback);
 
     msg_pub = nh.advertise<coms_msgs::Vehicle>("comsUplink", 1000);
     ros::Rate loop_rate(10);
