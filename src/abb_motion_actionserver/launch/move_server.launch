@@ -1,0 +1,10 @@
+<!--Launch file for arm hardcoded motion-->
+<!--see readme section on launch files for details on how to use file-->
+<!--maintainer email="nxgamarra@gmail.com">Nikolas Gamarra</maintainer-->
+<launch>
+
+ <node name="myActioServer" pkg="abb_motion_actionserver" type="abb_motion_actionserver_node" output="screen">
+    
+  </node>
+
+</launch>

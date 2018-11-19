@@ -39,6 +39,13 @@ TRAC-IK Kinematics Solver
 http://docs.ros.org/kinetic/api/moveit_tutorials/html/doc/trac_ik/trac_ik_tutorial.html
 
 
+To clone with all dependend submodules
+git clone URL
+cd FOLDER
+git submodule init
+git submodule update
+
+
 
 
 

@@ -1,0 +1,16 @@
+#goal
+int 64 x
+int 64 y
+int 64 z
+int 64 roll
+int 64 pitch
+int 64 yaw
+string frame
+
+---
+#result
+geometry_msgs/PoseStamped final
+---
+#feedback
+geometry_msgs/PoseStamped current
+
