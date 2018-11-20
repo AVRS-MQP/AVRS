@@ -1,4 +1,4 @@
-/* AVRS-MQP: abb_motion_actionserver
+/* AVRS-MQP: motion_action_server -g
  *  Maintainer: avrs.mqp@gmail.com
  *  Authors: Nikolas Gamarra, Ryan O'Brien
  */
@@ -27,25 +27,26 @@
 
 //action server inculdes
 
-#include <actionlib/server/motion_action_server.h>
-#include <motion_action_server/MoveRobot.h>  // Note: "Action" is appendedss
+#include <actionlib/server/simple_action_server.h>
+#include <chores/DoDishesAction.h>  // Note: "Action" is appendedss
+#include <chores/MoveRobotAction.h>
 
 //Location variables set at launch
 float roll, pitch, yaw;
 float x, y, z;
 
 //action server
-typedef actionlib::SimpleActionServer<abb_motion_actionserver::MoveRobotAction> Server;
+typedef actionlib::SimpleActionServer<chores::MoveRobotAction> Server;
 
 
 class MoveAction{
 	protected:
 		ros::NodeHandle nh_;
-		actionlib::SimpleActionServer<abb_motion_actionserver::MoveRobot> as_;
+		actionlib::SimpleActionServer<chores::MoveRobotAction> as_;
 
 		std::string action_name_;
-		abb_motion_actionserver::MoveRobot feedback_;
-		abb_motion_actionserver::MoveRobot result_;
+		chores::MoveRobotAction feedback_;
+		chores::MoveRobotAction result_;
 
 	public:
 		MoveAction(std::string name) :
@@ -58,13 +59,13 @@ class MoveAction{
 		}
 
 
-		void executeCB(const abb_motion_action_server::MoveRobotGoalConstPtr& goal){
+		void executeCB(const chores::MoveRobotAction &goal){
 			//create quaternion
 			tf::Quaternion q_rot;
 			tf::TransformListener listener;
 
 			//pull all the values from goal
-			roll=goal.roll;
+			roll=goal->roll;//TODO
 			pitch=goal.pitch;
 			yaw=goal.yaw;
 			x=goal.x;
@@ -123,7 +124,7 @@ class MoveAction{
 
 			//as->setSucceeded();
 		}
-}
+};
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "move_action_server");
