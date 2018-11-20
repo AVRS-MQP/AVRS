@@ -3,7 +3,7 @@
 <!--maintainer email="nxgamarra@gmail.com">Nikolas Gamarra</maintainer-->
 <launch>
 
- <node name="myActioServer" pkg="abb_motion_actionserver" type="abb_motion_actionserver_node" output="screen">
+ <node name="myActioServer" pkg="motion_action_server" type="motion_action_server_node" output="screen">
     
   </node>
 

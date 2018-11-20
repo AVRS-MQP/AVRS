@@ -26,8 +26,9 @@
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
 //action server inculdes
-#include <abb_motion_actionserver/MoveRobot.h>  // Note: "Action" is appended
-#include <actionlib/server/simple_action_server.h>
+
+#include <actionlib/server/motion_action_server.h>
+#include <motion_action_server/MoveRobot.h>  // Note: "Action" is appendedss
 
 //Location variables set at launch
 float roll, pitch, yaw;

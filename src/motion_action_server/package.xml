@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>abb_motion_actionserver</name>
+  <name>motion_action_server</name>
   <version>0.0.0</version>
   <description>The myworkcell_core package</description>
 
@@ -52,6 +52,11 @@
   <build_depend>roscpp</build_depend>
   <build_export_depend>roscpp</build_export_depend>
   <exec_depend>roscpp</exec_depend>
+  <exec_depend>message_generation</exec_depend>
+<build_depend>actionlib</build_depend>
+<build_depend>actionlib_msgs</build_depend>
+<exec_depend>actionlib</exec_depend>
+<exec_depend>actionlib_msgs</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
