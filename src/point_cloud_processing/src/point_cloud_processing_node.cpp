@@ -815,6 +815,9 @@ main (int argc, char** argv)
 	cl7_pub = nh.advertise<sensor_msgs::PointCloud2> ("cl7", 1);
 	cl8_pub = nh.advertise<sensor_msgs::PointCloud2> ("cl8", 1);
 	cl9_pub = nh.advertise<sensor_msgs::PointCloud2> ("cl9", 1);
-	ros::spin();
+	//ros::spin();
+	ros::AsyncSpinner spinner(4); // Use 4 threads
+	spinner.start();
+	ros::waitForShutdown();
 }		
 

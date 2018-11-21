@@ -22,6 +22,7 @@
 #include <pcl/correspondence.h>
 #include <pcl/visualization/pcl_visualizer.h>
 
+#include <geometry_msgs/Pose.h>
 
 //ROS_INTO 
 #define COLOR_RED "\033[1;31m"
@@ -36,109 +37,106 @@ static std::string nodeName("temp_name");
 static float xMinf, xMaxf, yMinf, yMaxf, zMinf, zMaxf;
 
 //publishers
-ros::Publisher pc2_pub;
+ros::Publisher pose_pub;
+ros::Publisher cloud_pub;
 
 int debugLevel =2;
-void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
-{
-  
+
+void computePose(){
+
+
+
+	pcl::PointXYZ pMin,pMax;
+	pcl::getMinMax3D (*cloud_p,pMin,pMax);
+
+	/*
+	   lidar_utility_msgs::roadInfo msg;
+
+	   msg.headerstamp = ros::Time::now();
+	   msg.header.frame_id = "/world";
+	   msg.xMax=pMax.x;
+	   msg.xMin=pMin.x;
+	   msg.yMax=pMax.y;
+	   msg.yMin=pMin.y;
+	   msg.zMax=pMax.z;
+	   msg.zMin=pMin.z;
+
+
+
+	   sensor_msgs::PointCloud2 output;//create output container
+	   pcl::PCLPointCloud2 temp_output;//create PCLPC2
+	   pcl::toPCLPointCloud2(*cloud_p,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
+	   pcl_conversions::fromPCL(temp_output,output);//convert to ROS data type
+	   pc2_pub.publish (output);// Publish the data.
+
+
+	 */
 }
-  int
+
+void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
+	ROS_INFO("%s: In Callback",nodeName.c_str());
+
+	pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;// Create a container for the data and filtered data.
+	pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
+
+	pcl_conversions::toPCL(*cloud_msg, *cloud);	//Convert to PCL data type
+
+	//create PCLXYZ for
+	i
+		pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);//create PCLXYZ for input to be converted to 
+	pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
+	pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
+	pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud2(new pcl::PointCloud<pcl::PointXYZ>);//create PCLXYZ
+}
+
+void vision_cb(const geometry_msgs::Pose& pose_msg){
+
+}
+	int
 main (int argc, char** argv)
 {
-  //initialize default topics for subscribing and publishing
-  const std::string defaultCloudSubscriber("cloud_pcd");
-  const std::string defaultMsgSubscriber("plane_segmented_msg");
-  const std::string defaultCloudPublisher("passThrough_filtered");
-  const std::string defaultMode("1");
+	// Initialize ROS
+	ros::init (argc, argv, nodeName);
+	ros::NodeHandle nh;
 
-  // Initialize ROS
-  ros::init (argc, argv, nodeName);
-  ros::NodeHandle nh;
+	nodeName = ros::this_node::getName();//Update name
 
-  nodeName = ros::this_node::getName();//Update name
+	//set parameters on new name
+	const std::string subscriberParamName1(nodeName + "/cloudSub");
+	const std::string subscriberParamName2(nodeName + "/visionSub");
+	const std::string publisherParamName1(nodeName + "/posePub");
+	const std::string publisherParamName2(nodeName + "/cloudPub");
 
+	printf(COLOR_BLUE BAR COLOR_RST);
+	ROS_INFO("Node Name: %s",nodeName.c_str());
 
-  //set parameters on new name
-  const std::string subscriberParamName(nodeName + "/subscriber");
-  const std::string subscriberParamName2(nodeName + "/msgSubscriber");
-  const std::string publisherParamName(nodeName + "/publisher");
-  const std::string modeParamName(nodeName + "/mode");
-  printf(COLOR_BLUE BAR COLOR_RST);
-  ROS_INFO("Node Name: %s",nodeName.c_str());
+	//Create variables that control the topic names
+	std::string sTopic1;
+	std::string sTopic2;
+	std::string pTopic1;
+	std::string pTopic2;
 
-  //Create variables that control the topic names
-  std::string sTopic;
-  std::string pTopic;
-  std::string myMode;
-  std::string sTopic2;
+	//pull the node specific params	
+	nh.getParam(subscriberParamName1,sTopic1);
+	nh.getParam(subscriberParamName2,sTopic2);
+	nh.getParam(publisherParamName1,pTopic1);
+	nh.getParam(publisherParamName2,pTopic2);
 
-  if(nh.hasParam(subscriberParamName)){//Check if the user specified a subscription topic
-    nh.getParam(subscriberParamName,sTopic);
-    printf(COLOR_GREEN BAR COLOR_RST);
-    ROS_INFO("%s: A param has been set **%s** \nSetting subsceiber to: %s",nodeName.c_str(),subscriberParamName.c_str(), sTopic.c_str());
-  }else{
-    sTopic=defaultCloudSubscriber;//set to default if not specified
-    printf(COLOR_RED BAR COLOR_RST);
-    ROS_INFO("%s: No param set **%s**  \nSetting subsceiber to: %s",nodeName.c_str(),subscriberParamName.c_str(), sTopic.c_str());
-  }
+	// Create a ROS subscriber for the input point cloud
+	ros::Subscriber sub1 = nh.subscribe (sTopic1.c_str(), 1, cloud_cb);
+	ros::Subscriber sub2 = nh.subscribe (sTopic2.c_str(), 1, vision_cb);
 
-  if(nh.hasParam(subscriberParamName2)){//Check if the user specified a subscription topic for msgs
-    nh.getParam(subscriberParamName2,sTopic2);
-    printf(COLOR_GREEN BAR COLOR_RST);
-    ROS_INFO("%s: A param has been set **%s** \nSetting subsceiber2 to: %s",nodeName.c_str(),subscriberParamName2.c_str(), sTopic2.c_str());
-  }else{
-    sTopic2=defaultMsgSubscriber;//set to default if not specified
-    printf(COLOR_RED BAR COLOR_RST);
-    ROS_INFO("%s: No param set **%s**  \nSetting subsceiber2 to: %s",nodeName.c_str(),subscriberParamName2.c_str(), sTopic2.c_str());
-  }
+	ROS_INFO("%s: Subscribing to %s",nodeName.c_str(),sTopic1.c_str());
+	ROS_INFO("%s: Subscribing to %s",nodeName.c_str(),sTopic2.c_str());
 
-  if(nh.hasParam(publisherParamName)){//Check if the user specified a publishing topic
-    printf(COLOR_GREEN BAR COLOR_RST);
-    nh.getParam(publisherParamName,pTopic);
-    ROS_INFO("%s: A param has been set **%s** \nSetting publisher to: %s",nodeName.c_str(),publisherParamName.c_str(), pTopic.c_str());
-  }else{printf(COLOR_RED BAR COLOR_RST);
-    pTopic=defaultCloudPublisher;//set to default if not specified
-    ROS_INFO("%s: No param set **%s** \nSetting publisher to: %s",nodeName.c_str(),publisherParamName.c_str(), pTopic.c_str());
-  }
+	// Create a ROS publisher for the output point cloud
+	pose_pub = nh.advertise<geometry_msgs::Pose> (pTopic1, 1);
+	cloud_pub = nh.advertise<sensor_msgs::PointCloud2> (pTopic2, 1);
 
-  if(nh.hasParam(modeParamName)){//Check if the user specified a subscription topic
-    nh.getParam(modeParamName,myMode);
-    printf(COLOR_GREEN BAR COLOR_RST);
-    ROS_INFO("%s: A param has been set **%s** \nSetting mode to: %s",nodeName.c_str(),modeParamName.c_str(), myMode.c_str());
-  }else{
-    sTopic=defaultMode;//set to default if not specified
-    printf(COLOR_RED BAR COLOR_RST);
-    ROS_INFO("%s: No param set **%s**  \nSetting subsceiber to: %s",nodeName.c_str(),modeParamName.c_str(), myMode.c_str());
-  }
-
-  ROS_INFO("modex: %s",myMode.c_str());
-
-  //Clears the assigned parameter. Without this default will never be used but instead the last spefified topic
-  nh.deleteParam(subscriberParamName);
-  nh.deleteParam(publisherParamName);
-  nh.deleteParam(modeParamName);
-  nh.deleteParam(subscriberParamName2);
-  if(myMode=="0"||myMode=="passThrough"||myMode=="A"){
-    mode=0;
-  }else if(myMode=="1"||myMode=="outlierRemoval"||myMode=="B"){
-    mode=1;
-  }else if(myMode=="2"||myMode=="transform"||myMode=="C"){
-    mode=2;
-  }else if(myMode=="3"||myMode=="don"||myMode=="D"){
-    mode=3;
-  }else if(myMode=="4"||myMode=="all"||myMode=="E"){
-    mode=4;
-  }
-
-  // Create a ROS subscriber for the input point cloud
-  ros::Subscriber sub = nh.subscribe (sTopic.c_str(), 1, cloud_cb);
-
-  ROS_INFO("%s: Subscribing to %s",nodeName.c_str(),sTopic.c_str());
-  // Create a ROS publisher for the output point cloud
-  pc2_pub = nh.advertise<sensor_msgs::PointCloud2> (pTopic, 1);
-  ROS_INFO("%s: Publishing to %s",nodeName.c_str(),pTopic.c_str());
-
-  ros::spin();
+	ROS_INFO("%s: Publishing to %s",nodeName.c_str(),pTopic1.c_str());
+	ROS_INFO("%s: Publishing to %s",nodeName.c_str(),pTopic2.c_str());
+	ros::AsyncSpinner spinner(2);
+	spinner.start();
+	ros::waitForShutdown();
 }		
 

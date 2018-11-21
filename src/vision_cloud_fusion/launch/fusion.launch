@@ -1,0 +1,26 @@
+<!--Launch file for nodelets-->
+<!--see readme section on launch files for details on how to use file-->
+<!--maintainer email="nxgamarra@gmail.com">Nikolas Gamarra</maintainer-->
+<launch>
+<!--Load settings as parameters from .yaml-->
+  <group ns="settings">
+    <rosparam command="load" file="$(find vision_cloud_fusion)/launch/fusion_settings.yaml" />
+  </group>
+
+  <arg name="cloudSub" default="point_cloud_cleaned" doc="The point cloud subscription" />
+  <arg name="visionSub" default="cv_flap_pose" doc="The vision subscription" />
+  <arg name="posePub" default="fusion_flap_pose" doc="the result pose" />
+  <arg name="cloudPub" default="fusion_cut_cloud" doc="a small cloud of the scanned area"  
+
+  <node name="cv_pc_fusion" pkg="vision_cloud_fusion" type="vision_cloud_fusion_node" output="screen">
+    <param name="cloudSub" value="$(arg cloudSub)"/>
+    <param name="visionSub" value="$(arg visionSub)"/>
+    <param name="posePub" value="$(arg posePub)"/>
+    <param name="cloudPub" value="$(arg cloudPub)"/>
+
+  </node>
+
+</launch>
+
+
+
