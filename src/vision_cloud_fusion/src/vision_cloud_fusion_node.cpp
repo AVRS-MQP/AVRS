@@ -76,7 +76,8 @@ ros::Publisher cloud_pub2;//debug pub
 ros::Publisher cloud_pub3;//multi debug pubs
 
 int debugLevel =2;
-
+class Fusion{
+private:
 void computePose(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){
 	ROS_INFO("Size at start of computePose:");
 	std::cout<< cloud->size() <<std::endl;
@@ -105,22 +106,22 @@ void computePose(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){
 	hullCloud->push_back(pcl::PointXYZ(x,y+dep,z+rad));//top +depth
 	hullCloud->push_back(pcl::PointXYZ(x,y+dep,z-rad));//bottom +depth
 
-//atempt to round flap. not working
-/*
-float conversion= M_PI/180;
-float angle=45.0;
+	//atempt to round flap. not working
+	/*
+	   float conversion= M_PI/180;
+	   float angle=45.0;
 
-float shortDist=sin(angle*conversion)*rad;
-rad=shortDist;
-	hullCloud->push_back(pcl::PointXYZ(x+rad,y,z+rad));//topright
-	hullCloud->push_back(pcl::PointXYZ(x-rad,y,z-rad));//bottomleft
-	hullCloud->push_back(pcl::PointXYZ(x-rad,y,z+rad));//topleft
-	hullCloud->push_back(pcl::PointXYZ(x+rad,y,z-rad));//bottomright
-	hullCloud->push_back(pcl::PointXYZ(x+rad,y+dep,z+rad));//right +depth
-	hullCloud->push_back(pcl::PointXYZ(x-rad,y+dep,z-rad));//left +depth
-	hullCloud->push_back(pcl::PointXYZ(x-rad,y+dep,z+rad));//top +depth
-	hullCloud->push_back(pcl::PointXYZ(x+rad,y+dep,z-rad));//bottom +depth
-*/
+	   float shortDist=sin(angle*conversion)*rad;
+	   rad=shortDist;
+	   hullCloud->push_back(pcl::PointXYZ(x+rad,y,z+rad));//topright
+	   hullCloud->push_back(pcl::PointXYZ(x-rad,y,z-rad));//bottomleft
+	   hullCloud->push_back(pcl::PointXYZ(x-rad,y,z+rad));//topleft
+	   hullCloud->push_back(pcl::PointXYZ(x+rad,y,z-rad));//bottomright
+	   hullCloud->push_back(pcl::PointXYZ(x+rad,y+dep,z+rad));//right +depth
+	   hullCloud->push_back(pcl::PointXYZ(x-rad,y+dep,z-rad));//left +depth
+	   hullCloud->push_back(pcl::PointXYZ(x-rad,y+dep,z+rad));//top +depth
+	   hullCloud->push_back(pcl::PointXYZ(x+rad,y+dep,z-rad));//bottom +depth
+	 */
 
 
 
@@ -175,11 +176,11 @@ rad=shortDist;
 	output.header.frame_id="camera_depth_optical_frame";
 	cloud_pub.publish(output);
 
-// vars for pose
+	// vars for pose
 
-float roll=0;
-float pitch=0;
-float yaw=0;
+	float roll=0;
+	float pitch=0;
+	float yaw=0;
 
 
 
@@ -210,16 +211,16 @@ float yaw=0;
 	pcl::PointXYZ pMin,pMax;
 	pcl::getMinMax3D (*cropResult,pMin,pMax);
 
-//---publish normals cloud
+	//---publish normals cloud
 
 
-sensor_msgs::PointCloud2 output3;//create output container
-pcl::PCLPointCloud2 temp_output3;//create PCLPC2
-pcl::toPCLPointCloud2(*cloud_normals,temp_output3);//convert from PCLXYZ to PCLPC2 must be pointer input
-pcl_conversions::fromPCL(temp_output3,output3);//convert to ROS data type
+	sensor_msgs::PointCloud2 output3;//create output container
+	pcl::PCLPointCloud2 temp_output3;//create PCLPC2
+	pcl::toPCLPointCloud2(*cloud_normals,temp_output3);//convert from PCLXYZ to PCLPC2 must be pointer input
+	pcl_conversions::fromPCL(temp_output3,output3);//convert to ROS data type
 
-output3.header.frame_id="camera_depth_optical_frame";
-cloud_pub3.publish(output3);
+	output3.header.frame_id="camera_depth_optical_frame";
+	cloud_pub3.publish(output3);
 
 
 
@@ -245,91 +246,91 @@ cloud_pub3.publish(output3);
 
 
 	 */
-//--aditional pose calculations
-pcl::CentroidPoint<pcl::PointXYZ> centroid;
+	//--aditional pose calculations
+	pcl::CentroidPoint<pcl::PointXYZ> centroid;
 
-pcl::PointCloud<pcl::PointXYZ>::iterator itt;
-/*
-for(itt=cropResult->points.begin(); itt<cropResult->points.end();itt++){
-centroid.add(pcl::PointXYZ(cropResult->points[*itt].x,cropResult->points[*itt].y,cropResult->points[*itt].z));
-}
-*/
-
-
-//pcl::PointXYZ c1;
-//centroid.get(c1);
-//y=c1.y;
+	pcl::PointCloud<pcl::PointXYZ>::iterator itt;
+	/*
+	   for(itt=cropResult->points.begin(); itt<cropResult->points.end();itt++){
+	   centroid.add(pcl::PointXYZ(cropResult->points[*itt].x,cropResult->points[*itt].y,cropResult->points[*itt].z));
+	   }
+	 */
 
 
-//---plane seg
-
-  pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
-  pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
-  // Create the segmentation object
-  pcl::SACSegmentation<pcl::PointXYZ> seg;
-  // Optional
-  seg.setOptimizeCoefficients (true);
-  // Mandatory
-  seg.setModelType (pcl::SACMODEL_PLANE);
-  seg.setMethodType (pcl::SAC_RANSAC);
-  seg.setDistanceThreshold (0.01);
-
-  seg.setInputCloud (cropResult);
-  seg.segment (*inliers, *coefficients);
-
-  if (inliers->indices.size () == 0)
-  {
-    ROS_WARN ("Could not estimate a planar model for the given dataset.");
-    //return (-1);
-  }
-
-// (in ax + by + cz + d = 0 form).
-  std::cerr << "Model coefficients: " << coefficients->values[0] << " " 
-                                      << coefficients->values[1] << " "
-                                      << coefficients->values[2] << " " 
-                                      << coefficients->values[3] << std::endl;
+	//pcl::PointXYZ c1;
+	//centroid.get(c1);
+	//y=c1.y;
 
 
-//calc angles rpy from slopes xyz
-// note abc not associated with angles of thier axis
-roll=atan2(coefficients->values[1],1);
-pitch=atan2(coefficients->values[2],1);
-yaw=atan2(coefficients->values[0],1);//seems correct
+	//---plane seg
 
-//print all the inliers
-/*
-  std::cerr << "Model inliers: " << inliers->indices.size () << std::endl;
-  for (size_t i = 0; i < inliers->indices.size (); ++i)
-    std::cerr << inliers->indices[i] << "    " << cloud->points[inliers->indices[i]].x << " "
-                                               << cloud->points[inliers->indices[i]].y << " "
-                                               << cloud->points[inliers->indices[i]].z << std::endl;
-*/
+	pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
+	pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+	// Create the segmentation object
+	pcl::SACSegmentation<pcl::PointXYZ> seg;
+	// Optional
+	seg.setOptimizeCoefficients (true);
+	// Mandatory
+	seg.setModelType (pcl::SACMODEL_PLANE);
+	seg.setMethodType (pcl::SAC_RANSAC);
+	seg.setDistanceThreshold (0.01);
+
+	seg.setInputCloud (cropResult);
+	seg.segment (*inliers, *coefficients);
+
+	if (inliers->indices.size () == 0)
+	{
+		ROS_WARN ("Could not estimate a planar model for the given dataset.");
+		//return (-1);
+	}
+
+	// (in ax + by + cz + d = 0 form).
+	std::cerr << "Model coefficients: " << coefficients->values[0] << " " 
+		<< coefficients->values[1] << " "
+		<< coefficients->values[2] << " " 
+		<< coefficients->values[3] << std::endl;
+
+
+	//calc angles rpy from slopes xyz
+	// note abc not associated with angles of thier axis
+	roll=atan2(coefficients->values[1],1);
+	pitch=atan2(coefficients->values[2],1);
+	yaw=atan2(coefficients->values[0],1);//seems correct
+
+	//print all the inliers
+	/*
+	   std::cerr << "Model inliers: " << inliers->indices.size () << std::endl;
+	   for (size_t i = 0; i < inliers->indices.size (); ++i)
+	   std::cerr << inliers->indices[i] << "    " << cloud->points[inliers->indices[i]].x << " "
+	   << cloud->points[inliers->indices[i]].y << " "
+	   << cloud->points[inliers->indices[i]].z << std::endl;
+	 */
 
 
 
 
-//the current dept dist
-y=pMin.y+((pMax.y-pMin.y)/2);
+	//the current dept dist
+	y=pMin.y+((pMax.y-pMin.y)/2);
 
-//other values tbd if set here
-x=pMin.x+((pMax.x-pMin.x)/2);
-z=pMin.z+((pMax.z-pMin.z)/2);
+	//other values tbd if set here
+	x=pMin.x+((pMax.x-pMin.x)/2);
+	z=pMin.z+((pMax.z-pMin.z)/2);
 
-float change = (M_PI/180)*5;
-roll=roll+change;
+	float change = (M_PI/180)*3;
+	roll=roll+change;
 
-change = (M_PI/180)*7;
-pitch=pitch-change;
-yaw=yaw-change;
-//roll=roll*-1;
-//roll=0;
-pitch=0;
-//pitch=0;
-//yaw=yaw*-1;
-//---Build Pose
-//	roll=roll*(M_PI/180);
-//	pitch=pitch*(M_PI/180);
-//	yaw=yaw*(M_PI/180);
+	change = (M_PI/180)*5;
+	pitch=pitch-change;
+	yaw=yaw-change;
+	//roll=roll*-1;
+	//roll=0;
+	pitch=0;
+	//pitch=0;
+	//yaw=yaw*-1;
+	//---Build Pose
+	//	roll=roll*(M_PI/180);
+	//	pitch=pitch*(M_PI/180);
+	//	yaw=yaw*(M_PI/180);
 	tf::Quaternion q_rot;
 	q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);//roll(x), pitch(y), yaw(z),
 	geometry_msgs::Pose poseFlap;
@@ -340,19 +341,19 @@ pitch=0;
 	poseFlap.position.x= x;
 	poseFlap.position.y= y;
 	poseFlap.position.z= z;
-//---Publish i
-//pose_pub.publish(poseFlap);
-static tf::TransformBroadcaster br;
-tf::Transform transf;
-tf::Quaternion q;
-q.setRPY(roll,pitch,yaw);
+	//---Publish i
+	//pose_pub.publish(poseFlap);
+	static tf::TransformBroadcaster br;
+	tf::Transform transf;
+	tf::Quaternion q;
+	q.setRPY(roll,pitch,yaw);
 
-transf.setOrigin(tf::Vector3(x,y,z));
-transf.setRotation(q);
-br.sendTransform(tf::StampedTransform(transf, ros::Time::now(), "camera_depth_optical_frame","flap"));
+	transf.setOrigin(tf::Vector3(x,y,z));
+	transf.setRotation(q);
+	br.sendTransform(tf::StampedTransform(transf, ros::Time::now(), "camera_depth_optical_frame","flap"));
 
 }
-
+public:
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
 	ROS_INFO("%s: In cloud callback",nodeName.c_str());
 
@@ -369,6 +370,8 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
 void vision_cb(const geometry_msgs::Pose& pose_msg){
 
 }
+
+};
 	int
 main (int argc, char** argv)
 {
@@ -399,9 +402,11 @@ main (int argc, char** argv)
 	nh.getParam(publisherParamName1,pTopic1);
 	nh.getParam(publisherParamName2,pTopic2);
 
+Fusion fusion;
+
 	// Create a ROS subscriber for the input point cloud
-	ros::Subscriber sub1 = nh.subscribe (sTopic1.c_str(), 1, cloud_cb);
-	ros::Subscriber sub2 = nh.subscribe (sTopic2.c_str(), 1, vision_cb);
+	ros::Subscriber sub1 = nh.subscribe (sTopic1.c_str(), 1, &Fusion::cloud_cb,&fusion);
+	ros::Subscriber sub2 = nh.subscribe (sTopic2.c_str(), 1, &Fusion::vision_cb,&fusion);
 
 	ROS_INFO("%s: Subscribing to %s",nodeName.c_str(),sTopic1.c_str());
 	ROS_INFO("%s: Subscribing to %s",nodeName.c_str(),sTopic2.c_str());
