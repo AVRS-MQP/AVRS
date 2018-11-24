@@ -43,6 +43,18 @@
 #include <pcl/filters/crop_hull.h>
 #include <pcl/surface/convex_hull.h>
 
+#include <pcl/point_types.h>
+#include <pcl/features/normal_3d.h>
+
+#include <pcl/common/centroid.h>
+
+
+#include <tf/tf.h>
+#include <tf/transform_datatypes.h>
+#include <tf/transform_broadcaster.h>
+
+
+#include <geometry_msgs/PoseStamped.h>
 //ROS_INTO 
 #define COLOR_RED "\033[1;31m"
 #define COLOR_GREEN "\033[1;32m"
@@ -63,36 +75,37 @@ ros::Publisher cloud_pub2;//debug pub
 int debugLevel =2;
 
 void computePose(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){
+	ROS_INFO("Size at start of computePose:");
+	std::cout<< cloud->size() <<std::endl;
 	ROS_INFO("Doing a little math...");
 	pcl::PointCloud<pcl::PointXYZ>::Ptr hullCloud(new pcl::PointCloud<pcl::PointXYZ>());
+
 	//	std::vector<pcl::Vertices> vertices;
 	pcl::Vertices vt;
 
 	//---Crop a cylinder out of the point cloud
 	float x = 0;
 	float y = 0;
-	float z = 0;
+	float z = -.15;
 	float rad = .1;//radius
 	float dep =2;//depth
 
 	//build cylinder TODO move to helper function
-	//hullCloud->push_back(pcl::PointXYZ(x,y,z));//center
-	//hullCloud->push_back(pcl::PointXYZ(x+rad,y,z));//right
-	//hullCloud->push_back(pcl::PointXYZ(x-rad,y,z));//left
-	//hullCloud->push_back(pcl::PointXYZ(x,y,z+rad));//top
-	//hullCloud->push_back(pcl::PointXYZ(x,y,z-rad));//bottom
-	//hullCloud->push_back(pcl::PointXYZ(x,y+dep,z));//center +depth
+	hullCloud->push_back(pcl::PointXYZ(x,y,z));//center
+	hullCloud->push_back(pcl::PointXYZ(x+rad,y,z));//right
+	hullCloud->push_back(pcl::PointXYZ(x-rad,y,z));//left
+	hullCloud->push_back(pcl::PointXYZ(x,y,z+rad));//top
+	hullCloud->push_back(pcl::PointXYZ(x,y,z-rad));//bottom
+	hullCloud->push_back(pcl::PointXYZ(x,y+dep,z));//center +depth
 	hullCloud->push_back(pcl::PointXYZ(x+rad,y+dep,z));//right +depth
 	hullCloud->push_back(pcl::PointXYZ(x-rad,y+dep,z));//left +depth
 	hullCloud->push_back(pcl::PointXYZ(x,y+dep,z+rad));//top +depth
 	hullCloud->push_back(pcl::PointXYZ(x,y+dep,z-rad));//bottom +depth
 
-	hullCloud->push_back(pcl::PointXYZ(x+rad,y+.1,z));//right
-	hullCloud->push_back(pcl::PointXYZ(x-rad,y+.1,z));//left
-	hullCloud->push_back(pcl::PointXYZ(x,y+.1,z+rad));//top
-	hullCloud->push_back(pcl::PointXYZ(x,y+.1,z-rad));//bottom
-
-
+	//hullCloud->push_back(pcl::PointXYZ(x+rad,y+(dep/2),z));//right +depth
+	//hullCloud->push_back(pcl::PointXYZ(x-rad,y+(dep/2),z));//left +depth
+	//hullCloud->push_back(pcl::PointXYZ(x,y+(dep/2),z+rad));//top +depth
+	//hullCloud->push_back(pcl::PointXYZ(x,y+(dep/2),z-rad));//bottom +depth
 
 
 	//--Output debug cloud
@@ -104,30 +117,10 @@ void computePose(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){
 	output2.header.frame_id="camera_depth_optical_frame";
 	cloud_pub2.publish(output2);
 
-
-
-	//vt stuff
-/*	
-	   vt.vertices.push_back(1);
-	   vt.vertices.push_back(2);
-	   vt.vertices.push_back(3);
-	   vt.vertices.push_back(4);
-	   vt.vertices.push_back(5);
-	   vt.vertices.push_back(6);
-	   vt.vertices.push_back(7);
-	   vt.vertices.push_back(8);
-	   vt.vertices.push_back(9);
-	   vt.vertices.push_back(10);
-	   vertices.push_back(vt);
-*/
-	 
-
-
 	pcl::ConvexHull<pcl::PointXYZ> hull;
 	hull.setInputCloud(hullCloud);
 	hull.setDimension(3);
 	std::vector<pcl::Vertices> vertices;
-
 
 	//pcl::PointCloud<pcl::PointXYZ>::Ptr surface_hull (new pcl::PointCloud<pcl::PointXYZ>());
 
@@ -146,6 +139,7 @@ void computePose(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){
 	//cropHull.filter(indices);
 
 	cropHull.filter(*cropResult);//compute and set output
+	ROS_INFO("size cropResult");
 	std::cout<< cropResult->size() <<std::endl;
 
 	//--Output cropped cloud
@@ -157,11 +151,42 @@ void computePose(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){
 	output.header.frame_id="camera_depth_optical_frame";
 	cloud_pub.publish(output);
 
+// vars for pose
+
+float roll=0;
+float pitch=0;
+float yaw=0;
+
+
+
+
+	//---calculate normals
+	pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
+	ne.setInputCloud (cloud);
+
+	// Create an empty kdtree representation, and pass it to the normal estimation object.
+	// Its content will be filled inside the object, based on the given input dataset (as no other search surface is given).
+	pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ> ());
+	ne.setSearchMethod (tree);
+
+	// Output datasets
+	pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
+
+	// Use all neighbors in a sphere of radius 3cm
+	ne.setRadiusSearch (0.03);
+
+	// Compute the features
+	ne.compute (*cloud_normals);
+
+	std::cout<< cloud_normals->size() <<std::endl;
+
 
 
 	//---GET Points for computing angles
 	pcl::PointXYZ pMin,pMax;
-	pcl::getMinMax3D (*cloud,pMin,pMax);
+	pcl::getMinMax3D (*cropResult,pMin,pMax);
+
+
 
 	/*
 	   lidar_utility_msgs::roadInfo msg;
@@ -185,24 +210,63 @@ void computePose(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){
 
 
 	 */
+//--aditional pose calculations
+pcl::CentroidPoint<pcl::PointXYZ> centroid;
+
+pcl::PointCloud<pcl::PointXYZ>::iterator itt;
+/*
+for(itt=cropResult->points.begin(); itt<cropResult->points.end();itt++){
+centroid.add(pcl::PointXYZ(cropResult->points[*itt].x,cropResult->points[*itt].y,cropResult->points[*itt].z));
+}
+*/
+
+
+//pcl::PointXYZ c1;
+//centroid.get(c1);
+//y=c1.y;
+
+y=.75;
+roll=.1;
+pitch=.1;
+yaw=.2;
+//---Build Pose
+	roll=roll*(M_PI/180);
+	pitch=pitch*(M_PI/180);
+	yaw=yaw*(M_PI/180);
+	tf::Quaternion q_rot;
+	q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);//roll(x), pitch(y), yaw(z),
+	geometry_msgs::Pose poseFlap;
+	//poseFlap.header.frame_id="camera_depth_optical_frame";
+
+	quaternionTFToMsg(q_rot,poseFlap.orientation);
+	//poseFlap.pose.orientation=q_rot;
+	poseFlap.position.x= x;
+	poseFlap.position.y= y;
+	poseFlap.position.z= z;
+//---Publish i
+//pose_pub.publish(poseFlap);
+static tf::TransformBroadcaster br;
+tf::Transform transf;
+tf::Quaternion q;
+q.setRPY(roll,pitch,yaw);
+
+transf.setOrigin(tf::Vector3(x,y,z));
+transf.setRotation(q);
+br.sendTransform(tf::StampedTransform(transf, ros::Time::now(), "camera_depth_optical_frame","flap"));
+
 }
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
 	ROS_INFO("%s: In cloud callback",nodeName.c_str());
-	ROS_DEBUG("test");
-	pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;// Create a container for the data and filtered data.
-	pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
 
-	pcl_conversions::toPCL(*cloud_msg, *cloud);	//Convert to PCL data type
-
-	//create PCLXYZ for
-
-	pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);//create PCLXYZ for input to be converted to 
 	pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
 	pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
-	pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud2(new pcl::PointCloud<pcl::PointXYZ>);//create PCLXYZ
+	pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);//create PCLXYZ
+	pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);//convert PCLPC2 to PCLXYZ
 
-	computePose(temp_cloud2);
+	ROS_INFO("Size in cloud_cb:");
+	std::cout<< temp_cloud->size() <<std::endl;
+	computePose(temp_cloud);
 }
 
 void vision_cb(const geometry_msgs::Pose& pose_msg){

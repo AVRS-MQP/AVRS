@@ -1,0 +1,20 @@
+<!--Launch file for nodelets-->
+<!--see readme section on launch files for details on how to use file-->
+<!--maintainer email="nxgamarra@gmail.com">Nikolas Gamarra</maintainer-->
+<launch>
+
+<!--Load settings as parameters from .yaml-->
+  <group ns="settings">
+    <rosparam command="load" file="$(find point_cloud_processing_experimental)/launch/point_cloud_settings.yaml" />
+  </group>
+
+
+
+  <node name="poin_cloud_processor0" pkg="point_cloud_processing_experimental" type="point_cloud_processing_experimental_node" output="screen">
+    <param name="subscriber" value="point_cloud_R"/>
+    <param name="publisher" value="clouds2"/>
+    <param name="mode" value="leaf"/>
+    <param name="msgSubscriber" value="zzzzzzzzz"/>
+  </node>
+
+</launch>
