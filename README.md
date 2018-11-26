@@ -27,6 +27,11 @@ roslaunch abb_irb1600_support robot_state_visualize_irb1600_6_12.launch J23_coup
 
 roslaunch abb_irb1600_6_12_moveit_config moveit_planning_execution.launch sim:=false robot_ip:=192.168.100.100
 
+roslaunch moveit_setup_assistant setup_assistant.launch
+
+
+
+
 
 
 Depends on
