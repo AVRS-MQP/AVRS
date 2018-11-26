@@ -9,6 +9,7 @@ add_compile_options(-std=c++11)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  rospy
   tf
   rviz_visual_tools
   moveit_visual_tools
@@ -119,7 +120,7 @@ catkin_package(
 #  LIBRARIES myworkcell_core
 #  CATKIN_DEPENDS roscpp
 #  DEPENDS system_lib
-  CATKIN_DEPENDS actionlib_msgs actionlib
+  CATKIN_DEPENDS roscpp actionlib_msgs actionlib
 
 )
 
