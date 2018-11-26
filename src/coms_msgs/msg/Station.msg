@@ -6,3 +6,4 @@ float32 yMax
 float32 yMin
 float32 zMax
 float32 zMin
+bool flap_not_open_error

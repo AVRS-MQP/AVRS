@@ -18,6 +18,9 @@ int lvl1 = 1;
 int lvl2 = 2;
 int lvl3 = 3;
 
+bool flap_auto_open;
+bool flap_unlocked;
+
 char carSel[6]; //Holds string for which vehicle is selected
 char chargeSel[8];  //Holds string for which charger matches the vehicle
 int battPcnt; //Will hold random percentage of 'battery' charge
@@ -52,10 +55,12 @@ void loop() {
       digitalWrite(ledPin, LOW);
     }
 
-    //Opens gas flap
-    if(incomingByte == 'O' || incomingByte == 'o') {
+    //Toggle gas flap locked/unlocked
+    if(incomingByte == 'f' || incomingByte == 'F') {
       Console.println("Opening gas flap");
       //TODO: vary two digital pin voltage to open the flap
+      flap_unlocked = !flap_unlocked;
+      Console.println(flap_unlocked);
     }
 
     //Asks for vehicle information for one of the three models 
@@ -63,16 +68,17 @@ void loop() {
     if(incomingByte == '1' || incomingByte == '2' || incomingByte == '3') { //Should later be set to push buttons or other physical input
       Console.println("Recieving vehicle information");
       vehicle_type(incomingByte);
-      delay(200);
+      delay(100);
       Console.println(carSel);
       Console.println(chargeSel);
       Console.println(battPcnt);
       Console.println(chgLvl);
+      Console.println(flap_auto_open);
 
     }
 
   }
-  delay(100);
+  delay(10);
 }
 
 //User input selects between three models of vehicles based on which female charger we have slotted 
@@ -84,17 +90,20 @@ void vehicle_type(char sel) {
     strcpy(carSel, car1);
     strcpy(chargeSel, charge1);
     chgLvl = lvl3;
+    flap_auto_open = true;
   }
   else if (sel == '2') { //Volt
     strcpy(carSel, car2);
     strcpy(chargeSel, charge2);
     chgLvl = lvl2;
+    flap_auto_open = false;
 
   }
   else { //Leaf
     strcpy(carSel, car3);
     strcpy(chargeSel, charge3);
     chgLvl = lvl2; //May also support level 3, needs confirmation
+    flap_auto_open = false;
   }
 
 }
