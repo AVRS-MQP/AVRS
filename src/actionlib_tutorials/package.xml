@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>motion_action_server</name>
+  <name>actionlib_tutorials</name>
   <version>0.0.0</version>
   <description>The actionlib_tutorials package</description>
 
