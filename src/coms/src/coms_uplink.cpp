@@ -12,15 +12,19 @@
 #include <iostream>
 #include <fstream>
 
+ros::Publisher msg_pub;
 
-void coms_cb() {
 
+	void coms_cb() {
+	msg.headerstamp = ros::Time::now();
+	coms_msgs::Station msg;
+	//does things based on the message recieved
+	//this will be handled in main
 
 }
 
 
 int main(int argc, char **argv) {
-
 
 	ros::init(argc,argv, "Uplink");
 	ros::NodeHandle nh;
