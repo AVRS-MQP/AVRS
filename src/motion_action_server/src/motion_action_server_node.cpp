@@ -28,108 +28,112 @@
 //action server inculdes
 
 #include <actionlib/server/simple_action_server.h>
-#include <chores/DoDishesAction.h>  // Note: "Action" is appendedss
-#include <chores/MoveRobotAction.h>
+//#include <motion_action_server/DoDishesAction.h>  // Note: "Action" is appendedss
+#include <motion_action_server/MoveRobotAction.h>
 
 //Location variables set at launch
 float roll, pitch, yaw;
 float x, y, z;
 
 //action server
-typedef actionlib::SimpleActionServer<chores::MoveRobotAction> Server;
+//typedef actionlib::SimpleActionServer<motion_action_server::MoveRobotAction> Server;
+
+//atmptn
+//using namespace motion_action_server;
+//typedef actionlib::SimpleAction
+
+class MoveAction
+{
+  protected:
+    ros::NodeHandle nh_;
+    actionlib::SimpleActionServer<motion_action_server::MoveAction> as_;
+
+    std::string action_name_;
+    motion_action_server::MoveRobotAction feedback_;
+    motion_action_server::MoveRobotAction result_;
+
+  public:
+    MoveAction(std::string name) :
+      as_(nh_,name, boost::bind(&MoveAction::executeCB, this, _1),false),action_name_(name)
+  {
+    as_.start();
+  }
+    ~MoveAction(void)
+    {
+    }
 
 
-class MoveAction{
-	protected:
-		ros::NodeHandle nh_;
-		actionlib::SimpleActionServer<chores::MoveRobotAction> as_;
+    void executeCB(const motion_action_server::MoveRobotAction &goal){
+      //create quaternion
+      tf::Quaternion q_rot;
+      tf::TransformListener listener;
 
-		std::string action_name_;
-		chores::MoveRobotAction feedback_;
-		chores::MoveRobotAction result_;
+      //pull all the values from goal
+      roll=goal->roll;//TODO
+      pitch=goal->pitch;
+      yaw=goal.yaw;
+      x=goal.x;
+      y=goal.y;
+      z=goal.z;
+      /*
+	 nh.getParam("move_pose/roll",roll);
+	 nh.getParam("move_pose/pitch",pitch);
+	 nh.getParam("move_pose/yaw",yaw);
 
-	public:
-		MoveAction(std::string name) :
-			as_(nh_,name, boost::bind(&MoveAction::executeCB, this, _1),false),action_name_(name)
-	{
-		as_.start();
-	}
-		~MoveAction(void)
-		{
-		}
+	 nh.getParam("move_pose/x_pos",x);
+	 nh.getParam("move_pose/y_pos",y);
+	 nh.getParam("move_pose/z_pos",z);
+       */
 
+      //convert deg to rad
+      roll=roll*(M_PI/180);
+      pitch=pitch*(M_PI/180);
+      yaw=yaw*(M_PI/180);
 
-		void executeCB(const chores::MoveRobotAction &goal){
-			//create quaternion
-			tf::Quaternion q_rot;
-			tf::TransformListener listener;
+      //create and fill pose	
+      q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);//roll(x), pitch(y), yaw(z),
+      geometry_msgs::Pose poseEOAT;
+      quaternionTFToMsg(q_rot,poseEOAT.orientation);
+      poseEOAT.position.x= x;
+      poseEOAT.position.y= y;
+      poseEOAT.position.z= z;
 
-			//pull all the values from goal
-			roll=goal->roll;//TODO
-			pitch=goal.pitch;
-			yaw=goal.yaw;
-			x=goal.x;
-			y=goal.y;
-			z=goal.z;
-			/*
-			   nh.getParam("move_pose/roll",roll);
-			   nh.getParam("move_pose/pitch",pitch);
-			   nh.getParam("move_pose/yaw",yaw);
+      //transform between joint 6 and base frame
+      /*
+	 tf::Transform tool_trans;
+	 tf::poseMsgToTF(poseEOAT, tool_trans);
 
-			   nh.getParam("move_pose/x_pos",x);
-			   nh.getParam("move_pose/y_pos",y);
-			   nh.getParam("move_pose/z_pos",z);
-			 */
+	 tf::StampedTransform j6_trans;
+	 listener.waitForTransform("/base_link","/link_6",ros::Time(0), ros::Duration(4.0));
 
-			//convert deg to rad
-			roll=roll*(M_PI/180);
-			pitch=pitch*(M_PI/180);
-			yaw=yaw*(M_PI/180);
+	 listener.lookupTransform("/base_link", "/link_6", ros::Time(0), j6_trans);
 
-			//create and fill pose	
-			q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);//roll(x), pitch(y), yaw(z),
-			geometry_msgs::Pose poseEOAT;
-			quaternionTFToMsg(q_rot,poseEOAT.orientation);
-			poseEOAT.position.x= x;
-			poseEOAT.position.y= y;
-			poseEOAT.position.z= z;
+	 tf::Transform j6_to_base;
+	 j6_to_base = j6_trans * tool_trans;
 
-			//transform between joint 6 and base frame
-			/*
-			   tf::Transform tool_trans;
-			   tf::poseMsgToTF(poseEOAT, tool_trans);
+	 tf::poseTFToMsg(j6_to_base, poseEOAT);
+       */
 
-			   tf::StampedTransform j6_trans;
-			   listener.waitForTransform("/base_link","/link_6",ros::Time(0), ros::Duration(4.0));
+      std::string base_frame = "/base_link";
 
-			   listener.lookupTransform("/base_link", "/link_6", ros::Time(0), j6_trans);
+      geometry_msgs::Pose move_target = poseEOAT;
+      moveit::planning_interface::MoveGroupInterface move_group("manipulator");
+      // Plan for robot to move to part
+      move_group.setPoseReferenceFrame(base_frame);
+      move_group.setPoseTarget(move_target);
 
-			   tf::Transform j6_to_base;
-			   j6_to_base = j6_trans * tool_trans;
+      moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
-			   tf::poseTFToMsg(j6_to_base, poseEOAT);
-			 */
+      move_group.move();
 
-			std::string base_frame = "/base_link";
-
-			geometry_msgs::Pose move_target = poseEOAT;
-			moveit::planning_interface::MoveGroupInterface move_group("manipulator");
-			// Plan for robot to move to part
-			move_group.setPoseReferenceFrame(base_frame);
-			move_group.setPoseTarget(move_target);
-
-			moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-
-			move_group.move();
-
-			//as->setSucceeded();
-		}
+      //as->setSucceeded();
+    }
 };
 int main(int argc, char **argv)
 {
-	ros::init(argc, argv, "move_action_server");
-	MoveAction move("move");
-	ros::spin();
+  ros::init(argc, argv, "motion_action_server");
+  MoveAction move("move");
+  ros::spin();
 
-	return 0;
+  return 0;
 }
