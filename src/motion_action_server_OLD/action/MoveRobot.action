@@ -9,8 +9,8 @@ string frame
 
 ---
 #result
-geometry_msgs/PoseStamped location
+geometry_msgs/PoseStamped final
 ---
 #feedback
-geometry_msgs/PoseStamped location
+geometry_msgs/PoseStamped current
 
