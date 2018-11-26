@@ -1,3 +1,7 @@
+/* AVRS-MQP: abb_motion_actionserver
+*  Maintainer: avrs.mqp@gmail.com
+*  Authors: Nikolas Gamarra, Ryan O'Brien
+*/
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 
@@ -11,6 +15,7 @@
 #include <stdio.h>
 
 ros::Publisher msg_pub;
+int count = 0;
 
 int msgPend; //Number of messages waiting to be read
 bool readFlag; //New msg will not be read unless flag is low. Set low after last msg is processed
@@ -30,51 +35,62 @@ void vehicle_callback(const ros::TimerEvent&)
 
   if (myFile.is_open()) {
     while (getline (myFile,line)) { //reads through the opened text file line by line
-     // std::cout << line << '/n';
-	std::cout << line;
+      // std::cout << line << '/n';
+      std::cout << line;
 
       if (std::cout == "Tesla") {
-      	stream << line;
-      	msg.model= stream.str();
+        stream << line;
+        msg.model= stream.str();
 
-      	std::cout << line;
-      	stream << line;
-      	msg.charger_type = stream.str();
+        std::cout << line;
+        stream << line;
+        msg.charger_type = stream.str();
 
-      	std::cout << line;
-      	msg.battery_charge = 50;
+        std::cout << line;
+        msg.battery_charge = stream.int();
 
-      	std::cout << line;
-      	msg.charge_level = 3;
-      	--msgPend;
+        std::cout << line;
+        msg.charge_level = 3;
+        --msgPend;
+
+        msg.flap_auto_open = true;
 
       }
 
       else if (std::cout == "Volt") {
         stream << line;
-      	msg.model= stream.str();
+        msg.model= stream.str();
 
-      	std::cout << line;
-      	stream << line;
-      	msg.charger_type = stream.str();
+        std::cout << line;
+        stream << line;
+        msg.charger_type = stream.str();
 
-      	std::cout << line;
-      	msg.battery_charge = 50;
+        std::cout << line;
+        msg.battery_charge = stream.int();
 
-      	std::cout << line;
-      	msg.charge_level = 2;
-      	--msgPend;
+        std::cout << line;
+        msg.charge_level = 2;
+        --msgPend;
+
+        msg.flap_auto_open = false;
       }
 
       else if (std::cout == "Leaf") {
-	msg.model= "Leaf";
-	std::cout << line;
-	msg.charger_type = "CHAdeMO";
-//	std::cout << line;
-//	msg.battery_charge = std::cout;
-//	std::cout << line;
-//	msg.charge_level = std::cout;
-	--msgPend;
+        stream << line;
+        msg.model= stream.str();
+
+        std::cout << line;
+        stream << line;
+        msg.charger_type = stream.str();
+
+        std::cout << line;
+        msg.battery_charge = stream.int();
+
+        std::cout << line;
+        msg.charge_level = 2;
+        --msgPend;
+
+        msg.flap_auto_open = false;
       }
 
     }
@@ -83,33 +99,29 @@ void vehicle_callback(const ros::TimerEvent&)
   }
 }
 
-  int main(int argc, char **argv) {
+int main(int argc, char **argv) {
 
-    ros::init(argc,argv, "Yun");
-    ros::NodeHandle nh;
+  ros::init(argc,argv, "Yun");
+  ros::NodeHandle nh;
 
-    //Connect To Yun
-    system("ssh root@vehiclesim.local 'telnet localhost 6571' 2>&1 | tee coms_out.txt");
-    ++msgPend; 
-    //ros::Duration(4).sleep(); //pause to make sure Yun is connected
-    //system("arduino"); //enter password to establish connection
+  //Connect To Yun
+  system("ssh root@vehiclesim.local 'telnet localhost 6571' 2>&1 | tee coms_out.txt");
+  ++msgPend;
+  //ros::Duration(4).sleep(); //pause to make sure Yun is connected
+  //system("arduino"); //enter password to establish connection
 
-    //ros::Subscriber sub = nh.subscribe ("comsUplink", 1, vehicle_callback);
+  //ros::Subscriber sub = nh.subscribe ("comsUplink", 1, vehicle_callback);
 
-    msg_pub = nh.advertise<coms_msgs::Vehicle>("comsUplink", 1000);
-    ros::Rate loop_rate(10);
-
-    int count = 0;
+  msg_pub = nh.advertise<coms_msgs::Vehicle>("comsUplink", 1);
+  ros::Rate loop_rate(10);
 
 
-    ros::Timer timer1 = nh.createTimer(ros::Duration(0.1), vehicle_callback);
+  ros::Timer timer1 = nh.createTimer(ros::Duration(0.1), vehicle_callback);
 
-    ros::spinOnce();
-    loop_rate.sleep();
-    ++count;
-    //}
+  ros::spinOnce();
+  loop_rate.sleep();
+  ++count;
 
-    //system("ssh root@vehiclesim.local 'telnet localhost 6571'");
 
-    return 0;
-  }
+  return 0;
+}

@@ -1,6 +1,7 @@
-/*Point Cloud Processing
- *Nikolas Xarles Gamarra
- */ 
+/* AVRS-MQP: abb_motion_actionserver
+*  Maintainer: avrs.mqp@gmail.com
+*  Authors: Nikolas Gamarra, Ryan O'Brien
+*/
 //ROS
 #include <ros/ros.h>
 #include <ros/master.h>
@@ -9,12 +10,12 @@
 #include <iostream>
 //custom msgs
 //#include <force_msgs/PointForce.h> // 6 fields: x, y, z location then x, y, z force
-//#include <force_msgs/PointForceArray.h> //Contains a number of PointForces 
+//#include <force_msgs/PointForceArray.h> //Contains a number of PointForces
 #include <force_msgs/LoadCellForces32.h>
 #include <geometry_msgs/Vector3.h>
 
 
-//ROS_INTO 
+//ROS_INTO
 #define COLOR_RED "\033[1;31m"
 #define COLOR_GREEN "\033[1;32m"
 #define COLOR_YELLOW "\033[1;33"
@@ -25,14 +26,50 @@
 static int mode =1;//fix this later
 static std::string nodeName("temp_name");
 static float xMinf, xMaxf, yMinf, yMaxf, zMinf, zMaxf;
+static float force_1, force_2, force_3;
 
 //publishers
 ros::Publisher force_pub;
 
 int debugLevel =2;
+//Holds calibrated force values
+float [2] cup_zeros, tesla_zeros, volt_zeros, leaf_zeros;
+
 
 void msg_cb (const force_msgs::LoadCellForces32 msg)
 {
+
+  force_msgs::LoadCellForces32 msg;
+  msg.headerstamp = ros::Time::now();
+
+  //Recieves three forces from the node on the arduino
+  //force_1 = msg.cellA;
+  //force_2 = msg.cellB;
+  //force_3 = msg.cellC;
+
+  //needs a non-blocking check that will constantly check that no two forces
+  //have too great a difference between them. Try catch maybe?
+  while(abs(force_1) - abs(force_2) < 1 || abs(force_1) - abs(force_3)
+        || abs(force_2) - abs(force_3))
+        {
+
+          //Do the things, flag isnt set
+
+        }
+
+  //trigger flag
+
+}
+
+//Calibrates forces for the indicated tool. 1 for suction, 2-4 for chargers
+void calibrate (int tool) {
+
+  //moves arm to preset 'zero' location
+
+  //reads forces a number of times and makes rolling average
+
+  //saves forces to preset
+
 
 }
 
@@ -132,5 +169,4 @@ int main (int argc, char** argv)
   ROS_INFO("%s: Publishing to %s",nodeName.c_str(),pTopic.c_str());
 
   ros::spin();
-}		
-
+}
