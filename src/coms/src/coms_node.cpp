@@ -46,8 +46,9 @@ void vehicle_callback(const ros::TimerEvent&)
         stream << line;
         msg.charger_type = stream.str();
 
-        std::cout << line;
-        msg.battery_charge = stream.int();
+        //std::cout << line;
+        //stream << line;
+       //msg.battery_charge = stream.str();
 
         std::cout << line;
         msg.charge_level = 3;
@@ -65,8 +66,9 @@ void vehicle_callback(const ros::TimerEvent&)
         stream << line;
         msg.charger_type = stream.str();
 
-        std::cout << line;
-        msg.battery_charge = stream.int();
+       // std::cout << line;
+       // stream << line;
+        //msg.battery_charge = stream.str();
 
         std::cout << line;
         msg.charge_level = 2;
@@ -83,8 +85,9 @@ void vehicle_callback(const ros::TimerEvent&)
         stream << line;
         msg.charger_type = stream.str();
 
-        std::cout << line;
-        msg.battery_charge = stream.int();
+        //std::cout << line;
+        //stream << line;
+        //msg.battery_charge = stream.str();
 
         std::cout << line;
         msg.charge_level = 2;

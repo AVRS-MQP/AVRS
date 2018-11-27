@@ -33,14 +33,14 @@ ros::Publisher force_pub;
 
 int debugLevel =2;
 //Holds calibrated force values
-float [2] cup_zeros, tesla_zeros, volt_zeros, leaf_zeros;
+float cup_zeros, tesla_zeros, volt_zeros, leaf_zeros;
 
 
 void msg_cb (const force_msgs::LoadCellForces32 msg)
 {
 
-  force_msgs::LoadCellForces32 msg;
-  msg.headerstamp = ros::Time::now();
+  force_msgs::LoadCellForces32 Fmsg;
+  Fmsg.headerstamp = ros::Time::now();
 
   //Recieves three forces from the node on the arduino
   //force_1 = msg.cellA;

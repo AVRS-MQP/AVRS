@@ -3,19 +3,23 @@
 from __future__ import print_function # Lets you print like Python 3
 import rospy
 import actionlib
-import simple_action_example.msg
+#import simple_action_example.msg
+#from motion_action_server import MoveRobot.msg
+#import MoveRobot.msg
+import motion_action_server.msg
 
-def motion_client():
+def avrs_main_node():
     # SimpleActionClient construction, targeting the fibonacci topic of type Fibonacci
     client = actionlib.SimpleActionClient('motion',
-                                          simple_action_example.msg.FibonacciAction)
+                                          motion_action_server.msg.MoveRobotAction)
 
     # Waits until the action server has started up and started
     # listening for goals. (So the goals aren't ignored.)
     client.wait_for_server()
 
     # Creates a goal to send to the action server.
-    goal = simple_action_example.msg.MoveRobot(x=1, y=1, z=1, roll=0, pitch=0, yaw=0)
+    goal = motion_action_server.msg.MoveRobotAction(x=1, y=1, z=1, roll=0, pitch=0, yaw=0, frame="x")
+
 
     # Sends the goal to the action server.
     client.send_goal(goal)
@@ -30,8 +34,8 @@ if __name__ == '__main__':
     try:
         # Initializes a rospy node so that the SimpleActionClient can
         # publish and subscribe over ROS.
-        rospy.init_node('motion_client_py')
-        result = fibonacci_client()
+        rospy.init_node('avrs_main_node_py')
+        result = avrs_main_node()
 
         print("Result:", ', '.join([str(n) for n in result.sequence]))
     except rospy.ROSInterruptException:
