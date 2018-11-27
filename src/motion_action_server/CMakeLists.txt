@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(motion_action_server)
+add_compile_options(-std=c++11)
 
-find_package(catkin REQUIRED COMPONENTS roscpp actionlib actionlib_msgs geometry_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp actionlib actionlib_msgs geometry_msgs   
+  tf
+  rviz_visual_tools
+  moveit_visual_tools
+  moveit_ros_planning_interface
+)
 find_package(Boost REQUIRED COMPONENTS system)
 
 add_action_files(
