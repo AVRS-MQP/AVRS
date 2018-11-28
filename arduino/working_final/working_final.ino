@@ -14,10 +14,10 @@
 //sensor includes
 #include <Wire.h>
 #include "Adafruit_VL6180X.h"
+#include "HX711.h"
 
 ros::NodeHandle  nh;
 
-   
 
 //make msgs
 std_msgs::String str_msg;
@@ -38,25 +38,77 @@ String errorMSG = "default";
 float range = 0;
 
 //definitions
-#define loadCellA_pin 1//top
-#define loadCellB_pin 2//clockwise
-#define loadCellC_pin 3
+#define DOUT_A  12 //Load cell A, top
+#define CLK_A  11
+#define DOUT_B  10 //Load cell B, clockwise
+#define CLK_B  9
+#define DOUT_C  8 //Load cell C
+#define CLK_C  7
 
-void calibrationCb(const std_msgs::Int32& calibration_msg){//
-  if(calibration_msg.data == 1){
-    digitalWrite(LED_BUILTIN, HIGH);   // blink the led
-  }else if (calibration_msg.data==0){
-    digitalWrite(LED_BUILTIN, LOW);   // turn led off
+//Load cell declarations 
+HX711 cellA(DOUT_A, CLK_A);
+HX711 cellB(DOUT_B, CLK_B);
+HX711 cellC(DOUT_C, CLK_C);
 
+//Values found using load_cell_calibrate.ino to calibrate and zero load cells
+float calibration_factorA = -10340.0; 
+float calibration_factorB = -10300.0;
+float calibration_factorC = -10330.0;
+
+long zero_factorA = 27369;
+long zero_factorB = 1250;
+long zero_factorC = 25000;
+
+
+//Listens to end_effector topic which contains string defining EOAT. Calibrates based on known weights
+void calibrationCb(const std_msgs::String& calibration_msg){//
+  
+  if(calibration_msg.data == "Tesla"){
+    zero_factorA = cellA.read_average();
+    zero_factorB = cellB.read_average();
+    zero_factorC = cellC.read_average();
+
+    cellA.set_offset(zero_factorA); 
+    cellB.set_offset(zero_factorB);
+    cellC.set_offset(zero_factorC);
+  }
+  else if(calibration_msg.data == "J1772") {
+    zero_factorA = cellA.read_average();
+    zero_factorB = cellB.read_average();
+    zero_factorC = cellC.read_average();
+    
+    cellA.set_offset(zero_factorA); 
+    cellB.set_offset(zero_factorB);
+    cellC.set_offset(zero_factorC);
+  }
+  else if(calibration_msg.data == "CHAdeMO") {
+    zero_factorA = cellA.read_average();
+    zero_factorB = cellB.read_average();
+    zero_factorC = cellC.read_average();
+
+    cellA.set_offset(zero_factorA); 
+    cellB.set_offset(zero_factorB);
+    cellC.set_offset(zero_factorC);
+    
+  }
+  else if(calibration_msg.data == "Suction Cup") {
+    zero_factorA = cellA.read_average();
+    zero_factorB = cellB.read_average();
+    zero_factorC = cellC.read_average();
+
+    cellA.set_offset(zero_factorA); 
+    cellB.set_offset(zero_factorB);
+    cellC.set_offset(zero_factorC);
+    
   }
 }//end calibrationCb
 
 //make subscriber
-ros::Subscriber<std_msgs::Int32> sub_calibration("force_calibration", &calibrationCb);
+ros::Subscriber<std_msgs::String> sub_calibration("end_effector", &calibrationCb);
 
 void setup()
 {
-
+    Serial.begin(9600);
     pinMode(LED_BUILTIN, OUTPUT);
 
   nh.initNode();//initialize the ros node
@@ -82,6 +134,14 @@ void setup()
   range_msg.min_range = -10;
   range_msg.max_range = 190;
 
+  //setup load cells
+  cellA.set_scale(calibration_factorA);
+  cellA.set_offset(zero_factorA); //can cellA.tare() if needed
+  cellB.set_scale(calibration_factorB); 
+  cellB.set_offset(zero_factorB);
+  cellC.set_scale(calibration_factorC); 
+  cellC.set_offset(zero_factorC);
+
   if (! vl.begin()) {
     //Serial.println("Failed to find sensor");
     errorMSG = "Failed to find sensor";
@@ -104,9 +164,9 @@ void loop()
 
   //set load cell msg valuse
   Force_msg.header.stamp = nh.now();
-  Force_msg.cellA = 5;
-  Force_msg.cellB = 0;
-  Force_msg.cellC = 10;
+  Force_msg.cellA = cellA.get_units();
+  Force_msg.cellB = cellB.get_units();
+  Force_msg.cellC = cellC.get_units();
 
   //set range msg
   range_msg.header.stamp = nh.now();
@@ -127,7 +187,6 @@ void loop()
   nh.spinOnce();
   delay(400);//1000
 }//end loop
-
 
 
 void checkRangeError() { //checks adafruit lib for errors and overites range if present

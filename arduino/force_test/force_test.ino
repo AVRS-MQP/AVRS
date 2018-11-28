@@ -44,7 +44,7 @@ void loop()
 {
 
   //set load cell msg valuse
-  Force_msg.header.stamp =nh.now();
+  Force_msg.header.stamp = nh.now();
   Force_msg.cellA = 5;
   Force_msg.cellB = 0;
   Force_msg.cellC = 10;
