@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(avrs_main)
+project(motion_action_server)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,12 +8,16 @@ project(avrs_main)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  
   roscpp
   rospy
   std_msgs
-  actionlib
-  actionlib_msgs
-  geometry_msgs
+
+
+  tf
+  rviz_visual_tools
+  moveit_visual_tools
+  moveit_ros_planning_interface
   
 )
 
@@ -24,7 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-catkin_python_setup()
+# catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -74,7 +78,7 @@ catkin_python_setup()
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   std_msgs
+#   geometry_msgs#   std_msgs
 # )
 
 ################################################
@@ -108,8 +112,8 @@ catkin_python_setup()
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES beginner_tutorials
-  CATKIN_DEPENDS motion_action_server
+#  LIBRARIES template
+  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs motion_action_server_msgs
 #  DEPENDS system_lib
 )
 
@@ -120,27 +124,47 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include motion_action_server_msgs
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/beginner_tutorials.cpp
+#   src/${PROJECT_NAME}/template.cpp
 # )
 
-## Add cmake target dependencies of the library
-## as an example, code may need to be generated before libraries
-## either from message generation or dynamic reconfigure
- add_dependencies(${motion_action_server} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-#add_dependencies(motion_action_server ${catkin_EXPORTED_TARGETS})
+
+#include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+
+add_executable(motion_server src/motion_server.cpp)
+
+target_link_libraries(
+  motion_server
+    ${catkin_LIBRARIES}
+)
+
+#add_dependencies(
+#  motion_server
+#  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#)
+
+# Add cmake target dependencies of the library
+# as an example, code may need to be generated before libraries
+# either from message generation or dynamic reconfigure
+ add_dependencies(${motion_server} ${${motion_action_server_msgs}} ${catkin_EXPORTED_TARGETS})
+
+
+
+
+
+
 
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/beginner_tutorials_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/template_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -167,7 +191,7 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 # install(PROGRAMS
-#   scripts/avrs_main_node
+#   scripts/my_python_script
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 
@@ -178,12 +202,12 @@ include_directories(
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 
-## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+# Mark cpp header files for installation
+ install(DIRECTORY include/${motion_action_server_msgs}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+   FILES_MATCHING PATTERN "*.h"
+   PATTERN ".svn" EXCLUDE
+ )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
@@ -197,7 +221,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_beginner_tutorials.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_template.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

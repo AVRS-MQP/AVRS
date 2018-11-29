@@ -6,19 +6,22 @@ import actionlib
 #import simple_action_example.msg
 #from motion_action_server import MoveRobot.msg
 #import MoveRobot.msg
-import motion_action_server.msg
+#import motion_action_server.msg
+import motion_action_server_msgs
+from motion_action_server_msgs.msg import MoveRobotAction
 
 def avrs_main_node():
     # SimpleActionClient construction, targeting the fibonacci topic of type Fibonacci
     client = actionlib.SimpleActionClient('motion',
-                                          motion_action_server.msg.MoveRobotAction)
+                                          motion_action_server_msgs.msg.MoveRobotAction)
 
     # Waits until the action server has started up and started
     # listening for goals. (So the goals aren't ignored.)
     client.wait_for_server()
 
     # Creates a goal to send to the action server.
-    goal = motion_action_server.msg.MoveRobotAction(x=1, y=1, z=1, roll=0, pitch=0, yaw=0, frame="x")
+    goal = motion_action_server_msgs.msg.MoveRobotAction()
+    goal.x=1
 
 
     # Sends the goal to the action server.
