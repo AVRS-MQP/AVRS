@@ -34,6 +34,7 @@ def avrs_main_node():
     return client.get_result()  # A FibonacciResult
 
 if __name__ == '__main__':
+    print("Client Running")
     try:
         # Initializes a rospy node so that the SimpleActionClient can
         # publish and subscribe over ROS.
