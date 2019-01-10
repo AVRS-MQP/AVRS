@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="microscope_eoat">
+<xacro:macro name="microscope_eoat" params="prefix">
+  <!-- link list -->
+  <link name="${prefix}base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://eoat/meshes/visual/microscope.stl"/>
+      </geometry>
+      <material name="abb_orange">
+        <color rgba="1 0.43 0 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://eoat/meshes/collision/microscope.stl"/>
+      </geometry>
+      <material name="yellow">
+        <color rgba="0 1 1 1"/>
+      </material>
+    </collision>
+  </link>
+  </xacro:macro>
+</robot>
+

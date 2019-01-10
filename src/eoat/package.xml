@@ -1,0 +1,7 @@
+<package format="2">
+  <name>eoat</name>
+  <version>0.0.0</version>
+  <description> test </description>
+  <license>Apache2</license>
+  <maintainer email="ngamarra@wpi.edu">NXG</maintainer>
+</package>

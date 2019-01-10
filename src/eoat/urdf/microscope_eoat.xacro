@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<robot name="microscope_eoat" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find eoat)/urdf/microscope_eoat_macro.xacro"/>
+  <xacro:microscope_eoat_macro prefix=""/>
+</robot>
+
+
