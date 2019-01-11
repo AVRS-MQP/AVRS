@@ -1,0 +1,5 @@
+<!--launcher motion server-->
+<launch>
+  <node pkg="motion_server" type="motion_server_node" name="motion_server_node" output="screen">
+  </node>
+</launch>

@@ -1,0 +1,4 @@
+#location of top left corner
+canvas_x: -1
+canvas_y: .25
+canvas_z: .2

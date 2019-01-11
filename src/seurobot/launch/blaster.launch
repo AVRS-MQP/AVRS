@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--One launch file to rule them all-->
+<!--see readme section on launch files for details on how to use file-->
+<!--maintainer email="nxgamarra@gmail.com">Nikolas Gamarra</maintainer-->
+<launch>
+  <!--launch abb control and visualization-->
+  <include file="$(find abb_irb1600_6_12_moveit_config)/launch/moveit_planning_execution.launch">
+    <!--arg name="robot_ip" value="192.168.100.100" /-->    
+    <arg name="J23_coupled" value="false" />
+    <arg name="sim" value="true" />
+  </include>
+  <!--launch serial coms to get force data from arduino-->
+  <include file="$(find seurobot)/launch/serialcoms0.launch">
+  </include>
+  <!--launch motion server-->
+  <include file="$(find motion_server)/launch/motion_server.launch">
+  </include>
+</launch>

@@ -1,0 +1,6 @@
+<!--TEST-->
+<launch>
+
+ <node pkg="tf" type="static_transform_publisher" name="kinect" args="-.50 .45 .75 -1.5708 0 0 base_link camera_link 1000"/>
+
+</launch>

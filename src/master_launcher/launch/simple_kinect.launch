@@ -4,10 +4,12 @@
 
 <launch>
 
+  <node name="rviz" pkg="rviz" type="rviz" args="-d ~/AVRS_ws/rviz/CLN_4.rviz" />
+
  <!--Kinect-->
   <include file="$(find freenect_launch)/launch/freenect.launch">
   </include>
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d ~/AVRS_ws/rviz/CLN_4.rviz" />
+
 
 </launch>

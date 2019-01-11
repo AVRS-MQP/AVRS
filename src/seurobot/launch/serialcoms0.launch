@@ -1,0 +1,11 @@
+<!--launcher serial coms on specific baud-->
+<launch>
+  <arg name="port_" default="/dev/ttyACM0" doc="port that the arduino will probabally be on" />
+  <arg name="baud_" default="57600" doc="57600 is default baud of arduino using rosserial" />
+  
+  <node pkg="rosserial_python" type="serial_node.py" name="serial_node" output="screen">
+    <param name="port" value="/dev/ttyACM0"/>
+    <param name="baud" value="57600"/>
+  </node>
+
+</launch>
