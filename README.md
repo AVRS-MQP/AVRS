@@ -1,40 +1,76 @@
 #AVRS-MQP
+Automatic Vehicle Recharging Station (AVRS)
+
+In the future when levle 5 autonomous vehicles exist, solutions will be needed to automate charging in order to create systems completely independent from human operation. 
+
+This Major Qualifying Project (MQP) aims to design, manufacure, and program such a system capable of opening the charging port flap and charging vehicle of different charging port types. 
 
 Advisors: Craig Putnam, Jie Fu
 Students: Matthew Fortmeyer, Nikolas Gamarra, Ryan O’Brien, Jacob Remz
 
 
-## Hey lets use markdown so it looks nice on Git
+## ROS packages/nodes and launch files
+
+- ROS-I
+Launch the ROS-I stack to connect to the robot and visualize in rviz:
 
 ```
-code
+roslaunch abb_irb1600_6_12_moveit_config moveit_planning_execution.launch sim:=false robot_ip:=192.168.100.100
 ```
 
+- motion_server
+This node recives action messages from the action client and sends motion requests to the ROS-I stack using move_group
 ```
-git config --global user.email "MY_NAME@example.com"
+roslaunch motion_server motion_server.launch 
 ```
 
-git log --pretty="%an %ae%n%cn %ce" | sort | uniq
-git log | grep Author: | sort | uniq
+- motion_planning_client
+This node is the main controll node written in python.  When in normal operation it will read an image and draw it on the white board. In debug mode it goes to manually  prgorammed locations.
 
+```
+roslaunch motion_planning_client motion_client.launch 
+```
 
-git commit --author="niko1499 <nxgamarra@gmail.com>" -m "commit as niko test" -a
+- point_cloud_processing
+Masages point cloud data (leafs,crops,removes outliers). 
 
+```
+roslaunch point_cloud_processing point_cloud_processing.launch 
+```
 
+- point_cloud_processing_experimental
+A playground for rapidly prototpying new point cloud filtering and interpretation.
+
+```
+roslaunch point_cloud_processing_experimental point_cloudv3.launch 
+```
+
+- master_launcher
+Package with various micilanous launch files and launch files that launch others
+
+```
+TBD/varies
+```
+
+- msgs
+Automatically generated custom msgs
+
+# NOTES
+```
 to visualize the robot run
-
-roslaunch abb_irb1600_support robot_state_visualize_irb1600_6_12.launch J23_coupled:="false" robot_ip:=192.168.100.100 
 
 roslaunch abb_irb1600_6_12_moveit_config moveit_planning_execution.launch sim:=false robot_ip:=192.168.100.100
 
 roslaunch moveit_setup_assistant setup_assistant.launch
 
+roslaunch master_launcher simple_kinect.launch 
+
+```
 
 
 
 
-
-Depends on
+## Depends on
 
 ROS-I
 PCL
