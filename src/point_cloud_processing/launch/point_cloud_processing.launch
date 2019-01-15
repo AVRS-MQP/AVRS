@@ -8,13 +8,12 @@
     <rosparam command="load" file="$(find point_cloud_processing)/launch/point_cloud_settings.yaml" />
   </group>
 
-
-
-  <node name="poin_cloud_processor4" pkg="point_cloud_processing" type="point_cloud_processing_node" output="screen">
-    <param name="subscriber" value="point_cloud_R"/>
-    <param name="publisher" value="clouds"/>
-    <param name="mode" value="don"/>
-    <param name="msgSubscriber" value="zzzzzzzzz"/>
+  <node name="poin_cloud_processor1" pkg="point_cloud_processing" type="point_cloud_processing_node" output="screen">
+    <param name="subscriber" value="/camera/depth/points"/>
+    <param name="publisher" value="points_filtered"/>
   </node>
+
+
+
 
 </launch>

@@ -318,7 +318,7 @@ main (int argc, char** argv)
 		pTopic=defaultCloudPublisher;//set to default if not specified
 		ROS_INFO("%s: No param set **%s** \nSetting publisher to: %s",nodeName.c_str(),publisherParamName.c_str(), pTopic.c_str());
 	}
-
+/*
 	if(nh.hasParam(modeParamName)){//Check if the user specified a subscription topic
 		nh.getParam(modeParamName,myMode);
 		printf(COLOR_GREEN BAR COLOR_RST);
@@ -349,7 +349,7 @@ main (int argc, char** argv)
 	}else if(myMode=="4"||myMode=="euc"||myMode=="E"){
 		mode=4;
 	}
-
+*/
 	// Create a ROS subscriber for the input point cloud
 	ros::Subscriber sub = nh.subscribe (sTopic.c_str(), 1, cloud_cb);
 

@@ -6,7 +6,7 @@
     <rosparam command="load" file="$(find vision_cloud_fusion)/launch/fusion_settings.yaml" />
   </group>
 <!--TODO RENAME subscriber after experimental shift-->
-  <arg name="cloudSub" default="point_cloud_R" doc="The point cloud subscription" />
+  <arg name="cloudSub" default="points_filtered" doc="The point cloud subscription" />
   <arg name="visionSub" default="cv_flap_pose" doc="The vision subscription" />
   <arg name="posePub" default="fusion_flap_pose" doc="the result pose" />
   <arg name="cloudPub" default="fusion_cut_cloud" doc="a small cloud of the scanned area"  />
