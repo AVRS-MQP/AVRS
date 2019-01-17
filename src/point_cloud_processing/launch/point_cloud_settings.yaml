@@ -1,4 +1,5 @@
 frame_id: 'Robot?'
+debug_level : 0
 outlierRemoval_MeanK: 75
 outlierRemoval_StdDev: 2
 outlierRemoval_SearchRadius: 25

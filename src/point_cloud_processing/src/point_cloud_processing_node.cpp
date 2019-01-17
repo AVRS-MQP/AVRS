@@ -81,6 +81,8 @@ static float leafSize=.01;
 static float maxIterations=100;
 static float distanceThreshold=.02;
 static float clusterTollerance=.325;
+
+static int debug_level=3;
 //static float minClusterSize=100;
 //static float maxClusterSize=200000;//default 40000 0 for test
 
@@ -112,7 +114,8 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 	pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
 	pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);//convert PCLPC2 to PCLXYZ
 	 */
-	ROS_INFO("PCP: leaf");	
+	if(debug_level>1)
+		ROS_INFO("PCP: leaf");	
 	//NEW CONVERSION
 	pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
 	pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
@@ -131,8 +134,8 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 	vg.setInputCloud (temp_cloud);
 	vg.setLeafSize (leafSize, leafSize, leafSize);//default (0.01f, 0.01f, 0.01f)//SETTING
 	vg.filter (*cloud_filtered);
-
-	std::cout << "PointCloud after filtering has: " << cloud_filtered->points.size ()  << " data points." << std::endl;
+	if(debug_level>2)
+		std::cout << "PointCloud after filtering has: " << cloud_filtered->points.size ()  << " data points." << std::endl;
 	/*
 	   sensor_msgs::PointCloud2 output;//create output container
 	   pcl::PCLPointCloud2 temp_output;//create PCLPC2
@@ -185,8 +188,8 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 	   pc2_pub.publish (output);// Publish the data.
 	 */
 	//------------------OUTLIER REMOVAL
-
-	ROS_INFO("PCP: outlierRemoval");
+	if(debug_level>1)
+		ROS_INFO("PCP: outlierRemoval");
 	// Create a container for the data and filtered data.
 	/*		pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
 			pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
@@ -194,14 +197,14 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 	//Convert to PCL data type
 	pcl_conversions::toPCL(*cloud_msg, *cloud);
 	 */
-//	pcl::PCLPointCloud2 cloud_filtered_2;
-//pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
-//pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
+	//	pcl::PCLPointCloud2 cloud_filtered_2;
+	//pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
+	//pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
 
-//pcl::toPCLPointCloud2(*cloud_filtered_xyz,cloud);
+	//pcl::toPCLPointCloud2(*cloud_filtered_xyz,cloud);
 
 
-pcl::PointCloud<pcl::PointXYZ> cloud_filtered_2;
+	pcl::PointCloud<pcl::PointXYZ> cloud_filtered_2;
 
 	//pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered_2 (new pcl::PointCloud<pcl::PointXYZ> ());
 	//pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
@@ -211,22 +214,22 @@ pcl::PointCloud<pcl::PointXYZ> cloud_filtered_2;
 	sor.setStddevMulThresh (statOutlier_stdDev);//SETTING
 	sor.filter (cloud_filtered_2);
 
- sensor_msgs::PointCloud2 output;//create output container
-	   pcl::PCLPointCloud2 temp_output;//create PCLPC2
-	   pcl::toPCLPointCloud2(cloud_filtered_2,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
-	   pcl_conversions::fromPCL(temp_output,output);//convert to ROS data type
-	   pc2_pub.publish (output);// Publish the data.
+	sensor_msgs::PointCloud2 output;//create output container
+	pcl::PCLPointCloud2 temp_output;//create PCLPC2
+	pcl::toPCLPointCloud2(cloud_filtered_2,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
+	pcl_conversions::fromPCL(temp_output,output);//convert to ROS data type
+	pc2_pub.publish (output);// Publish the data.
 
 
-	
-/*
+
+	/*
 	//convert to ROS data type
 	sensor_msgs::PointCloud2 output;
 	//pcl_conversions::fromPCl(cloud_filtered_2,output);
 	pcl_conversions::fromPCL(cloud_filtered_2,output);
 	// Publish the data.
 	pc2_pub.publish (output);
-*/
+	 */
 
 }
 	int
@@ -276,6 +279,8 @@ main (int argc, char** argv)
 	nh.getParam("settings/euc_maxIterations",maxIterations);
 	nh.getParam("settings/euc_distancethreshold",distanceThreshold);
 	nh.getParam("settings/euc_clusterTollerance",clusterTollerance);
+
+	nh.getParam("settings/debug_level",debug_level);
 	//set parameters on new name
 	const std::string subscriberParamName(nodeName + "/subscriber");
 	const std::string subscriberParamName2(nodeName + "/msgSubscriber");
@@ -318,18 +323,18 @@ main (int argc, char** argv)
 		pTopic=defaultCloudPublisher;//set to default if not specified
 		ROS_INFO("%s: No param set **%s** \nSetting publisher to: %s",nodeName.c_str(),publisherParamName.c_str(), pTopic.c_str());
 	}
-/*
-	if(nh.hasParam(modeParamName)){//Check if the user specified a subscription topic
-		nh.getParam(modeParamName,myMode);
-		printf(COLOR_GREEN BAR COLOR_RST);
-		ROS_INFO("%s: A param has been set **%s** \nSetting mode to: %s",nodeName.c_str(),modeParamName.c_str(), myMode.c_str());
-	}else{
-		sTopic=defaultMode;//set to default if not specified
-		printf(COLOR_RED BAR COLOR_RST);
-		ROS_INFO("%s: No param set **%s**  \nSetting subsceiber to: %s",nodeName.c_str(),modeParamName.c_str(), myMode.c_str());
-	}
+	/*
+	   if(nh.hasParam(modeParamName)){//Check if the user specified a subscription topic
+	   nh.getParam(modeParamName,myMode);
+	   printf(COLOR_GREEN BAR COLOR_RST);
+	   ROS_INFO("%s: A param has been set **%s** \nSetting mode to: %s",nodeName.c_str(),modeParamName.c_str(), myMode.c_str());
+	   }else{
+	   sTopic=defaultMode;//set to default if not specified
+	   printf(COLOR_RED BAR COLOR_RST);
+	   ROS_INFO("%s: No param set **%s**  \nSetting subsceiber to: %s",nodeName.c_str(),modeParamName.c_str(), myMode.c_str());
+	   }
 
-	ROS_INFO("modex: %s",myMode.c_str());
+	   ROS_INFO("modex: %s",myMode.c_str());
 
 	//Clears the assigned parameter. Without this default will never be used but instead the last spefified topic
 	nh.deleteParam(subscriberParamName);
@@ -337,19 +342,19 @@ main (int argc, char** argv)
 	nh.deleteParam(modeParamName);
 	nh.deleteParam(subscriberParamName2);
 	if(myMode=="-1"||myMode=="leaf"||myMode=="Z"){
-		mode=-1;
+	mode=-1;
 	}else if(myMode=="0"||myMode=="passThrough"||myMode=="A"){
-		mode=0;
+	mode=0;
 	}else if(myMode=="1"||myMode=="outlierRemoval"||myMode=="B"){
-		mode=1;
+	mode=1;
 	}else if(myMode=="2"||myMode=="transform"||myMode=="C"){
-		mode=2;
+	mode=2;
 	}else if(myMode=="3"||myMode=="don"||myMode=="D"){
-		mode=3;
+	mode=3;
 	}else if(myMode=="4"||myMode=="euc"||myMode=="E"){
-		mode=4;
+	mode=4;
 	}
-*/
+	 */
 	// Create a ROS subscriber for the input point cloud
 	ros::Subscriber sub = nh.subscribe (sTopic.c_str(), 1, cloud_cb);
 
@@ -357,7 +362,7 @@ main (int argc, char** argv)
 	// Create a ROS publisher for the output point cloud
 	pc2_pub = nh.advertise<sensor_msgs::PointCloud2> (pTopic, 1);
 	ROS_INFO("%s: Publishing to %s",nodeName.c_str(),pTopic.c_str());
-	
+
 
 	ros::AsyncSpinner spinner(4); // Use 4 threads
 	spinner.start();
