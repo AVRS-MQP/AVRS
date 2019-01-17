@@ -12,6 +12,16 @@ Students: Matthew Fortmeyer, Nikolas Gamarra, Ryan O’Brien, Jacob Remz
 
 ## ROS packages/nodes and launch files
 
+- master.launch
+This is the most complete launch file. the arg "sim:=true" can be added if not connecting to the robot. 
+
+Currently launchs Kinect drivers, ROS-I, static Frame transofrmations, point cloud filtering,
+
+```
+roslaunch master_launcher master.launch
+```
+
+
 - ROS-I
 Launch the ROS-I stack to connect to the robot and visualize in rviz:
 

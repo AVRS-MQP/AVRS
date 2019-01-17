@@ -4,15 +4,34 @@
 
 <launch>
  
+
+  <arg name="sim" default="false" />
  <!--Launch other nodes-->
 
- <!--performs object detection DoN-->
-  <include file="$(find object_detective_don)/launch/object_detective_slave.launch">
-    <arg name="name" value="object_detective_don" />
-    <arg name="subscriber" value="adv_obj" />
-    <arg name="msgSubscriber" value="plane_segmented_msg"/>
-    <arg name="publisher" value="objects_don" />
-    <arg name="mode" value="u" />
+ <!--Kinect-->
+  <include file="$(find freenect_launch)/launch/freenect.launch">
+  </include>
+
+ <!--ROS-Industrial-->
+  <group if="$(arg sim)">
+    <include file="$(find abb_irb1600_6_12_moveit_config)/launch/moveit_planning_execution.launch">
+      <arg name="sim" value="$(arg sim)"/>
+    </include>
+  </group>
+
+  <group unless="$(arg sim)">
+    <include file="$(find abb_irb1600_6_12_moveit_config)/launch/moveit_planning_execution.launch">
+      <arg name="sim" value="$(arg sim)"/>
+      <arg name="robot_ip" value="192.168.100.100"/>
+    </include>
+  </group>
+<!--Static TFs-->
+  <include file="$(find master_launcher)/launch/staticTFs.launch">
+  </include>
+
+
+ <!--Launches filtering of point cloud-->
+  <include file="$(find point_cloud_processing)/launch/point_cloud_processing.launch">
   </include>
  <!--Making a costmmap_2d-->
 
