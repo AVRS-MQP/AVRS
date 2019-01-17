@@ -247,8 +247,10 @@ class Fusion{
 
 
 
-
+// TODO FIX to centroid or mean of all z vals or remove outliers need to fix values over edge errors
 //set XYZ
+
+
 				//the current dept dist
 				y=pMin.y+((pMax.y-pMin.y)/2);
 
