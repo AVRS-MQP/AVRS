@@ -97,23 +97,6 @@ ros::Publisher pc2_pub;
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
 
-	// Create a container for the data and filtered data.
-	/*
-	   pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
-
-	   pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
-	   pcl::PCLPointCloud2 cloud_filtered;
-	   pcl_conversions::toPCL(*cloud_msg, *cloud);
-
-	//Convert to PCL data type
-	pcl_conversions::toPCL(*cloud_msg, *cloud);
-	called = true;
-
-	pcl::PointCloud<pcl::PointNormal>::Ptr temp_cloud (new pcl::PointCloud<pcl::PointNormal> ());
-	pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
-	pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
-	pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);//convert PCLPC2 to PCLXYZ
-	 */
 	if(debug_level>1)
 		ROS_INFO("PCP: leaf");	
 	//NEW CONVERSION
@@ -136,29 +119,13 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 	vg.filter (*cloud_filtered);
 	if(debug_level>2)
 		std::cout << "PointCloud after filtering has: " << cloud_filtered->points.size ()  << " data points." << std::endl;
-	/*
-	   sensor_msgs::PointCloud2 output;//create output container
-	   pcl::PCLPointCloud2 temp_output;//create PCLPC2
-	   pcl::toPCLPointCloud2(*cloud_filtered,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
-	   pcl_conversions::fromPCL(temp_output,output);//convert to ROS data type
-	   pc2_pub.publish (output);// Publish the data.
-	 */
-	//---------------passthrough
-	/*
-	   ROS_INFO("PCP: passThrough");
-	   pcl::PCLPointCloud2 pcl_pc2;//create PCLPC2
-	   pcl_conversions::toPCL(*cloud_msg,pcl_pc2);//convert ROSPC2 to PCLPC2
-	   pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);//create PCLXYZ
-	   pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);//convert PCLPC2 to PCLXYZ
-	 */
+
 
 	temp_cloud=cloud_filtered;
 
 	pcl::PointIndices::Ptr indices_x (new pcl::PointIndices);
 	pcl::PointIndices::Ptr indices_xy (new pcl::PointIndices);
 
-	///pcl::PCLPointX cloud_filtered_x;
-	//pcl::PCLPointCloud2 cloud_filtered_xz;
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered_x (new pcl::PointCloud<pcl::PointXYZ> ());
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered_xy (new pcl::PointCloud<pcl::PointXYZ> ());
@@ -180,34 +147,12 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 	ptfilter.setFilterLimits (zMinf+boxMargin_setting, zMaxf-boxMargin_setting);//SETTING
 	//ptfilter.setNegative (false);
 	ptfilter.filter (*cloud_filtered_xyz);
-	/*
-	   sensor_msgs::PointCloud2 output;//create output container
-	   pcl::PCLPointCloud2 temp_output;//create PCLPC2
-	   pcl::toPCLPointCloud2(*cloud_filtered_xyz,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
-	   pcl_conversions::fromPCL(temp_output,output);//convert to ROS data type
-	   pc2_pub.publish (output);// Publish the data.
-	 */
+
 	//------------------OUTLIER REMOVAL
 	if(debug_level>1)
 		ROS_INFO("PCP: outlierRemoval");
-	// Create a container for the data and filtered data.
-	/*		pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
-			pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
-
-	//Convert to PCL data type
-	pcl_conversions::toPCL(*cloud_msg, *cloud);
-	 */
-	//	pcl::PCLPointCloud2 cloud_filtered_2;
-	//pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
-	//pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
-
-	//pcl::toPCLPointCloud2(*cloud_filtered_xyz,cloud);
-
 
 	pcl::PointCloud<pcl::PointXYZ> cloud_filtered_2;
-
-	//pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered_2 (new pcl::PointCloud<pcl::PointXYZ> ());
-	//pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
 	pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
 	sor.setInputCloud (cloud_filtered_xyz);
 	sor.setMeanK (statOutlier_meanK);//SETTING
@@ -219,17 +164,6 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 	pcl::toPCLPointCloud2(cloud_filtered_2,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
 	pcl_conversions::fromPCL(temp_output,output);//convert to ROS data type
 	pc2_pub.publish (output);// Publish the data.
-
-
-
-	/*
-	//convert to ROS data type
-	sensor_msgs::PointCloud2 output;
-	//pcl_conversions::fromPCl(cloud_filtered_2,output);
-	pcl_conversions::fromPCL(cloud_filtered_2,output);
-	// Publish the data.
-	pc2_pub.publish (output);
-	 */
 
 }
 	int

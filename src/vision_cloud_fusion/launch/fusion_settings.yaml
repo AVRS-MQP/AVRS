@@ -1,3 +1,5 @@
+frame_id: 'Robot?'
+debug_level : 0
 
-#alpha: -M_PI/2
-
+statOutlier_meanK: 150
+statOutlier_stdDev: .1

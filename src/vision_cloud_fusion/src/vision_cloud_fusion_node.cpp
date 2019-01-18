@@ -9,6 +9,9 @@
 #include <iostream>
 //custom msgs
 //PCL specific includes
+#include <pcl/filters/statistical_outlier_removal.h>
+
+
 #include <pcl/common/common.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -52,6 +55,7 @@
 #include <tf/tf.h>
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
 
 #include <stdio.h>
 #include <math.h>
@@ -69,6 +73,12 @@ static int mode =1;//fix this later
 static std::string nodeName("temp_name");
 static float xMinf, xMaxf, yMinf, yMaxf, zMinf, zMaxf;
 
+//outlier vars
+static float statOutlier_meanK=75;
+static float statOutlier_stdDev=.9;
+
+
+static int debug_level=3;
 //publishers
 ros::Publisher pose_pub;
 ros::Publisher cloud_pub;
@@ -91,7 +101,7 @@ class Fusion{
 			float x = -0.25;
 			float y = -0.06;
 			float z = 0; 
-			float rad = .15;//radius//.1
+			float rad = .175;//radius//.1
 			float dep =2;//depth
 
 			//build cylinder TODO move to helper function
@@ -162,10 +172,20 @@ class Fusion{
 
 			if(cropResult->size()!=0){
 
+
+
+//remove outliers
+	pcl::PointCloud<pcl::PointXYZ> cloud_filtered;
+        pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
+        sor.setInputCloud (cropResult);
+        sor.setMeanK (statOutlier_meanK);//SETTING
+        sor.setStddevMulThresh (statOutlier_stdDev);//SETTING
+        sor.filter (cloud_filtered);
+
 				//--Output cropped cloud
 				sensor_msgs::PointCloud2 output;//create output container
 				pcl::PCLPointCloud2 temp_output;//create PCLPC2
-				pcl::toPCLPointCloud2(*cropResult,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
+				pcl::toPCLPointCloud2(cloud_filtered,temp_output);//convert from PCLXYZ to PCLPC2 must be pointer input
 				pcl_conversions::fromPCL(temp_output,output);//convert to ROS data type
 
 				output.header.frame_id="camera_depth_optical_frame";
@@ -193,7 +213,7 @@ class Fusion{
 
 				//---GET Points for computing angles
 				pcl::PointXYZ pMin,pMax;
-				pcl::getMinMax3D (*cropResult,pMin,pMax);
+				pcl::getMinMax3D (cloud_filtered,pMin,pMax);
 
 				//---plane seg
 				pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
@@ -206,6 +226,10 @@ class Fusion{
 				seg.setModelType (pcl::SACMODEL_PLANE);
 				seg.setMethodType (pcl::SAC_RANSAC);
 				seg.setDistanceThreshold (0.01);
+
+
+//::PointCloud<pcl::PointXYZ> linaccpc;//TODO make it so seg actually uses outlers removed
+//pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered_PTR (&cloud_filtered);
 
 				seg.setInputCloud (cropResult);
 				seg.segment (*inliers, *coefficients);
@@ -221,7 +245,7 @@ class Fusion{
 					<< coefficients->values[1] << " "
 					<< coefficients->values[2] << " " 
 					<< coefficients->values[3] << std::endl;
-				
+
 				// vars for pose
 				float roll=0;
 				float pitch=0;
@@ -247,8 +271,8 @@ class Fusion{
 
 
 
-// TODO FIX to centroid or mean of all z vals or remove outliers need to fix values over edge errors
-//set XYZ
+				// TODO FIX to centroid or mean of all z vals or remove outliers need to fix values over edge errors
+				//set XYZ
 
 
 				//the current dept dist
@@ -257,15 +281,15 @@ class Fusion{
 				//other values tbd if set here
 				x=pMin.x+((pMax.x-pMin.x)/2);
 				z=pMin.z+((pMax.z-pMin.z)/2);
-				
 
 
-//mess with orientation
+
+				//mess with orientation
 
 
-yaw=0;
-/*
-//constant modifiers to angle
+				//yaw=0;
+				/*
+				//constant modifiers to angle
 				float change = (M_PI/180)*3;
 				roll=roll+change;
 
@@ -278,7 +302,7 @@ yaw=0;
 				//pitch=0;
 				//yaw=yaw*-1;
 
-*/
+				 */
 				//---Build Pose/transform
 				//convert deg to rad
 				/*	roll=roll*(M_PI/180);
@@ -311,6 +335,9 @@ yaw=0;
 			}
 		}
 	public:
+
+
+		tf::StampedTransform camera_transform;
 
 		//activates when a new cloud is recived, convers it to ROS types and calls fusion with it as an argument
 		void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
@@ -362,7 +389,27 @@ main (int argc, char** argv)
 	nh.getParam(publisherParamName1,pTopic1);
 	nh.getParam(publisherParamName2,pTopic2);
 
+
+//pull settings
+
+        nh.getParam("settings/statOutlier_meanK", statOutlier_meanK);
+        nh.getParam("settings/statOutlier_stdDev", statOutlier_stdDev);
+nh.getParam("settings/debug_level",debug_level);
+
 	Fusion fusion;
+
+
+	//tf listener stup
+	//while(node.ok()){
+	tf::TransformListener listener;
+	try{
+		listener.lookupTransform("/arm_camera","/camera_link",ros::Time(0),fusion.camera_transform);
+	}catch(tf::TransformException &ex){
+		ROS_ERROR("%s",ex.what());
+		ros::Duration(1.0).sleep();
+		
+	}
+
 
 	// Create a ROS subscriber for the input point cloud
 	ros::Subscriber sub1 = nh.subscribe (sTopic1.c_str(), 1, &Fusion::cloud_cb,&fusion);
@@ -385,4 +432,3 @@ main (int argc, char** argv)
 	spinner.start();
 	ros::waitForShutdown();
 }		
-
