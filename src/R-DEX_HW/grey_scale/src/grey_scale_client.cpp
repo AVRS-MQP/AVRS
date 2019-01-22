@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 	}else if(argc > 1){
 		srv.request.inputLoc = strdup(argv[1]);
 	}else if (argc > 0){
-		ROS_INFO("No input provided. Using default input: %s", path.c_str());
+		ROS_WARN("No input provided. Using default input: %s", path.c_str());
 		srv.request.inputLoc=path.c_str();
 	}
 
