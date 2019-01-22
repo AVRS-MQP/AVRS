@@ -3,11 +3,17 @@
 #include <ros/package.h>
 #include "opencv2/core/version.hpp"// In ros Kinetic OpenCV3 is default. According to tutorial this include should allow coding in OpenCV3
 //http://wiki.ros.org/opencv3
+#include <stdio.h>
 
 static std::string nodeName("grey_scale_server");
 class GreyScale{
 	private:
 	bool greyScale(const char* input, const char* output){
+	Mat image;
+	image=imread(input,1);
+	Mat gray_image;
+	cvtColor(image,gray_image, CV_BGR2GRAY);
+	imwrite(output,gray_image);	
 	
 	}
 
