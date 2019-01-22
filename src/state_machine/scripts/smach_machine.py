@@ -82,7 +82,7 @@ class LocateFlap(smach.State):
 class Flap(smach.State):
     def __init__(self):
         smach.State.__init__(self,
-                             outcomes=['flap_approach_pose','find_port_pose'],
+                             outcomes=['flap_approach_pose', 'find_port_pose'],
                              input_keys=['car_model'],
                              output_keys=['flap_is_open'])
 
@@ -165,7 +165,7 @@ class ChangeTool(smach.State):
     def __init__(self):
         smach.State.__init__(self,
                              outcomes=['find_port_pose'],
-                             input_keys=['car_model','current_tool'],
+                             input_keys=['car_model', 'current_tool'],
                              output_keys=['current_tool'])
 
     def execute(self, userdata):
@@ -195,7 +195,7 @@ class PortApproachPose(smach.State):
 class ApproachPort(smach.State):
     def __init__(self):
         smach.State.__init__(self,
-                             outcomes=['charging','PortApproachPose'],
+                             outcomes=['charging', 'PortApproachPose'],
                              input_keys=['input1'],
                              output_keys=['output1'])
 
