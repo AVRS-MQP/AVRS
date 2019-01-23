@@ -16,6 +16,13 @@ import motion_msgs
 from motion_msgs.msg import MoveRobotAction
 from force_msgs.msg import LoadCellForces32
 
+from geometry_msgs.msg import (
+    PoseStamped,
+    Pose,
+    Point,
+    Quaternion,
+)
+
 
 class Robot:
 
@@ -35,7 +42,6 @@ class Robot:
     lastTool = 0
     zClearance = .04
     zTouching = .015
-
 
     def __init__(self):
         self.client = actionlib.SimpleActionClient('motion',
@@ -239,7 +245,29 @@ def main_node():
     rospy.spin()
 
 
+def target_cb(msg):
+    # myRobot.move(Pose.x)
+    print(msg)
+
+
+def listener():
+
+    myRobot = Robot()
+    # In ROS, nodes are uniquely named. If two nodes with the same
+    # name are launched, the previous one is kicked off. The
+    # anonymous=True flag means that rospy will choose a unique
+    # name for our 'listener' node so that multiple listeners can
+    # run simultaneously.
+    rospy.init_node('listener', anonymous=True)
+
+    rospy.Subscriber("smach_target", PoseStamped, target_cb, myRobot)
+
+    # spin() simply keeps python from exiting until this node is stopped
+    rospy.spin()
+
+
 if __name__ == '__main__':
+    listener()
     print("Client Running...")
     boardx = rospy.get_param('workcell/canvas_x')
     boardy = rospy.get_param('workcell/canvas_y')
