@@ -3,7 +3,7 @@
 <launch>
 <!--Load settings as parameters from .yaml-->
   <group ns="fusion_settings">
-    <rosparam command="load" file="$(find vision_cloud_fusion)/launch/fusion_settings.yaml" />
+    <rosparam command="load" file="$(find vision_cloud_fusion)/launch/fusion_settings.yaml"  />
   </group>
 <!--TODO RENAME subscriber after experimental shift-->
   <arg name="cloudSub" default="points_filtered" doc="The point cloud subscription" />
@@ -11,7 +11,7 @@
   <arg name="posePub" default="fusion_flap_pose" doc="the result pose" />
   <arg name="cloudPub" default="fusion_cut_cloud" doc="a small cloud of the scanned area"  />
 
-  <node name="cv_pc_fusion" pkg="vision_cloud_fusion" type="vision_cloud_fusion_node" output="screen">
+  <node name="cv_pc_fusion" pkg="vision_cloud_fusion" type="vision_cloud_fusion_node" output="log">
     <param name="cloudSub" value="$(arg cloudSub)"/>
     <param name="visionSub" value="$(arg visionSub)"/>
     <param name="posePub" value="$(arg posePub)"/>
