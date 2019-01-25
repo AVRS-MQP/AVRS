@@ -153,6 +153,7 @@ class Fusion{
 	pcl::PointCloud<pcl::PointXYZ> cloud_filtered;
 	pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
 	sor.setInputCloud (cropResult);
+ROS_INFO("MEANK%f",statOutlier_meanK);
 	sor.setMeanK (statOutlier_meanK);//SETTING
 	sor.setStddevMulThresh (statOutlier_stdDev);//SETTING
 	sor.filter (cloud_filtered);
@@ -283,6 +284,12 @@ class Fusion{
 
 	tf::Quaternion q_rot;
 	q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);//roll(x), pitch(y), yaw(z),
+
+//attempt to clear out roll field
+
+   q_rot.normalize();
+
+
 	geometry_msgs::Pose poseFlap;
 	//poseFlap.header.frame_id="camera_depth_optical_frame";
 
@@ -363,8 +370,8 @@ main (int argc, char** argv)
 
   //pull settings
 
-  nh.getParam("settings/statOutlier_meanK", statOutlier_meanK);
-  nh.getParam("settings/statOutlier_stdDev", statOutlier_stdDev);
+  nh.getParam("fusion_settings/statOutlier_meanK", statOutlier_meanK);
+  nh.getParam("fusion_settings/statOutlier_stdDev", statOutlier_stdDev);
 
   Fusion fusion;
 

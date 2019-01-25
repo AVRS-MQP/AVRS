@@ -11,7 +11,7 @@
   <arg name="posePub" default="fusion_flap_pose" doc="the result pose" />
   <arg name="cloudPub" default="fusion_cut_cloud" doc="a small cloud of the scanned area"  />
 
-  <node name="cv_pc_fusion" pkg="vision_cloud_fusion" type="vision_cloud_fusion_node" output="log">
+  <node name="cv_pc_fusion" pkg="vision_cloud_fusion" type="vision_cloud_fusion_node" output="screen">
     <param name="cloudSub" value="$(arg cloudSub)"/>
     <param name="visionSub" value="$(arg visionSub)"/>
     <param name="posePub" value="$(arg posePub)"/>

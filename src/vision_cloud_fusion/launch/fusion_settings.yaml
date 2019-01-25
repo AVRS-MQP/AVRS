@@ -1,5 +1,5 @@
 frame_id: 'Robot?'
 debug_level : 0
 
-statOutlier_meanK: 150
-statOutlier_stdDev: .1
+statOutlier_meanK: 140
+statOutlier_stdDev: .3
