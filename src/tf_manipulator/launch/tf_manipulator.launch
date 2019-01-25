@@ -1,0 +1,12 @@
+<!--Launch file for sensor fusion node-->
+<!--maintainer email="nxgamarra@gmail.com">Nikolas Gamarra</maintainer-->
+<launch>
+
+  <node name="tf_man" pkg="tf_manipulator" type="tf_manipulator_node" output="screen">
+
+  </node>
+
+</launch>
+
+
+

@@ -153,7 +153,7 @@ class Fusion{
 	pcl::PointCloud<pcl::PointXYZ> cloud_filtered;
 	pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
 	sor.setInputCloud (cropResult);
-ROS_INFO("MEANK%f",statOutlier_meanK);
+	//ROS_INFO("MEANK%f",statOutlier_meanK);
 	sor.setMeanK (statOutlier_meanK);//SETTING
 	sor.setStddevMulThresh (statOutlier_stdDev);//SETTING
 	sor.filter (cloud_filtered);
@@ -285,11 +285,10 @@ ROS_INFO("MEANK%f",statOutlier_meanK);
 	tf::Quaternion q_rot;
 	q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);//roll(x), pitch(y), yaw(z),
 
-//attempt to clear out roll field
+	//attempt to clear out roll field
+	q_rot.normalize();
 
-   q_rot.normalize();
-
-
+	//q_rot[1]=0;
 	geometry_msgs::Pose poseFlap;
 	//poseFlap.header.frame_id="camera_depth_optical_frame";
 
@@ -302,12 +301,31 @@ ROS_INFO("MEANK%f",statOutlier_meanK);
 	//pose_pub.publish(poseFlap);
 	static tf::TransformBroadcaster br;
 	tf::Transform transf;
-	tf::Quaternion q;
-	q.setRPY(roll,pitch,yaw);
-
 	transf.setOrigin(tf::Vector3(x,y,z));
-	transf.setRotation(q);
-	br.sendTransform(tf::StampedTransform(transf, ros::Time::now(), "camera_depth_optical_frame","flap"));
+	transf.setRotation(q_rot);
+	br.sendTransform(tf::StampedTransform(transf, ros::Time::now(), "camera_depth_optical_frame","flap_raw"));
+/*
+	float clearDist=.2;
+	tf::Transform clear;
+	tf::Quaternion q;
+	float fixRoll =1.5707963;
+	q.setRPY(0,0,yaw+fixRoll);
+	clear.setOrigin(tf::Vector3(0,0,-clearDist));
+	clear.setRotation(q);
+
+	br.sendTransform(tf::StampedTransform(clear,ros::Time::now(),"flap_raw","flap_clear"));
+
+
+	  tf::Transform touch;
+	  q.setRPY(0,0,0);
+	  touch.setOrigin(tf::Vector3(0,0,clearDist));
+	  touch.setRotation(q);
+
+
+	  br.sendTransform(tf::StampedTransform(touch,ros::Time::now(),"flap_clear","flap_touch"));
+*/
+
+
       }else{
 	ROS_WARN("cropResult size zero");
       }
@@ -408,4 +426,5 @@ main (int argc, char** argv)
   ros::AsyncSpinner spinner(2);
   spinner.start();
   ros::waitForShutdown();
+
 }		
