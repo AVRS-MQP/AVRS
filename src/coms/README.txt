@@ -8,6 +8,6 @@ Volt, or a Leaf. The info is written to a text file, read by the node, and made
 into a message to be published by coms_node. Coms_uplink is a test node that
 handles the coms messages that was later made a part of main.
 
-```
+
 Required Libraries: coms_msgs
-```
+

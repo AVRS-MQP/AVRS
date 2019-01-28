@@ -1,5 +1,11 @@
+#include <SparkFunSerialGraphicLCD.h>//inculde the Serial Graphic LCD library
+#include <SoftwareSerial.h>
 #include <Console.h>
 
+LCD LCD;
+char message[]= "Select Vehicle to Simulate ";
+int n = 0;
+int pb[4] = {0,0,0,0}; //Push button top, right, bottom, left in order.
 const int ledPin = 13; // the pin that the LED is attached to
 int incomingByte;      // a variable to read incoming serial data into
 
@@ -31,11 +37,18 @@ void setup() {
   // initialize serial communication:
   Bridge.begin();
   Console.begin(); 
+  LCD.clearScreen();
+  LCD.setHome();
 
   while (!Console){
     ; // wait for Console port to connect.
   }
   Console.println("Now connected to the vehicle");
+  
+  LCD.printStr("Select vehicle to simulate:");
+  LCD.nextLine();
+  LCD.printStr("Top -> Tesla  " "Bottom -> Volt");
+  
   // initialize the LED pin as an output:
   pinMode(ledPin, OUTPUT);
 }
@@ -91,19 +104,22 @@ void vehicle_type(char sel) {
     strcpy(chargeSel, charge1);
     chgLvl = lvl3;
     flap_auto_open = true;
+    LCD.printStr("tesla selected");
   }
   else if (sel == '2') { //Volt
     strcpy(carSel, car2);
     strcpy(chargeSel, charge2);
     chgLvl = lvl2;
     flap_auto_open = false;
-
+    LCD.printStr("volt selected");
   }
   else { //Leaf
     strcpy(carSel, car3);
     strcpy(chargeSel, charge3);
     chgLvl = lvl2; //May also support level 3, needs confirmation
     flap_auto_open = false;
+    LCD.printStr("volt selected");
+
   }
 
 }

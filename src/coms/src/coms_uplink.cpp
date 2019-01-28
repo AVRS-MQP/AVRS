@@ -15,9 +15,10 @@
 ros::Publisher msg_pub;
 
 
-	void coms_cb() {
+void coms_cb() {
 	msg.headerstamp = ros::Time::now();
 	coms_msgs::Station msg;
+
 	//does things based on the message recieved
 	//this will be handled in main
 
