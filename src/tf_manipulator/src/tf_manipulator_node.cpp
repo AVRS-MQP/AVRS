@@ -22,9 +22,12 @@ int main(int argc, char** argv){
 		tf::StampedTransform transform;
 		if(savedFlag==false){
 			try{
+				ros::Time now =ros::Time::now();
+				
+				listener.waitForTransform("/base_link","/flap_raw",now,ros::Duration(3.0));
 
 				listener.lookupTransform("/base_link", "/flap_raw",  
-						ros::Time(0), transform);
+						now, transform);
 
 
 				tf::Vector3 orig=transform.getOrigin();
@@ -45,8 +48,8 @@ int main(int argc, char** argv){
 
 			}
 			catch (tf::TransformException ex){
-
 				ROS_WARN("%s",ex.what());
+				ros::Duration(1.0).sleep();
 			}
 		}else{
 
