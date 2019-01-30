@@ -1,0 +1,26 @@
+# -*- shell-script -*-
+# Copyright 1999-2019 ImageMagick Studio LLC
+# Definitions of optional features and configuration values for this build.
+# Intended for use by test scripts.
+MAGICK_FEATURES='DPC HDRI Cipher OpenMP'
+top_srcdir='/home/avrs/AVRS_ws/ImageMagick-7.0.8-25'
+top_builddir='/home/avrs/AVRS_ws/ImageMagick-7.0.8-25'
+
+set -a
+COMPARE="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/utilities/magick compare"
+COMPOSITE="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/utilities/magick composite"
+CONJURE="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/utilities/magick conjure"
+CONVERT="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/utilities/magick convert"
+DISPLAY="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/utilities/magick display"
+IDENTIFY="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/utilities/magick identify"
+MAGICK="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/utilities/magick"
+MONTAGE="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/utilities/magick montage"
+VALIDATE="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/tests/validate"
+DRAWTEST="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/tests/drawtest"
+WANDTEST="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/tests/wandtest"
+LD_LIBRARY_PATH="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/MagickCore/.libs:/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/MagickWand/.libs:${LD_LIBRARY_PATH}"
+MAGICK_CODER_MODULE_PATH="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/coders"
+MAGICK_CONFIGURE_PATH="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/config:/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/config"
+MAGICK_FILTER_MODULE_PATH="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/filters"
+PATH="/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/utilities:/home/avrs/AVRS_ws/ImageMagick-7.0.8-25/tests:${PATH}"
+set +a

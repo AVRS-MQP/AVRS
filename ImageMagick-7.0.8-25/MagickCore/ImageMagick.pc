@@ -1,0 +1,14 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include/ImageMagick-7
+includearchdir=/usr/local/include/ImageMagick-7
+libname=MagickCore-7.Q16HDRI
+ 
+Name: ImageMagick
+Description: ImageMagick - convert, edit, and compose images (ABI Q16HDRI)
+URL: https://github.com/ImageMagick
+Version: 7.0.8
+Cflags:  -I${includearchdir} -I${includedir} -fopenmp -DMAGICKCORE_HDRI_ENABLE=1 -DMAGICKCORE_QUANTUM_DEPTH=16
+Libs: -L${libdir} -l${libname}
+Libs.private: -L${libdir} -l${libname}  -ljbig -llcms2 -ltiff -lfreetype  -ljpeg  -llqr-1 -lglib-2.0 -lpng12  -ldjvulibre -lfftw3   -lfontconfig -lfreetype  -lwebpmux -lwebp -lwebp -lwmflite  -lXext -lXt   -lSM -lICE -lX11  -llzma -lbz2 -lIlmImf -lImath -lHalf -lIex -lIexMath -lIlmThread -lpthread  -lpangocairo-1.0 -lpango-1.0 -lgobject-2.0 -lglib-2.0 -lcairo   -lxml2  -lz     -lm     -lgomp -lm

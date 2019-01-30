@@ -9,20 +9,110 @@
 #include <geometry_msgs/PoseStamped.h>
 
 #include <geometry_msgs/Vector3.h>
+double degTorad(double deg){
+	return (deg*(M_PI/180));
+}
 
+	geometry_msgs::Pose savedPose;//TODO boost share
+void timerCallback(const ros::TimerEvent&){
+
+
+ROS_INFO("PUBLISHING");//TODO
+
+			double x=savedPose.position.x;
+			double y=savedPose.position.y;
+			double z=savedPose.position.z;
+ROS_INFO("%f , %f , %f ",x, y ,z);
+			tf::Quaternion savedQ;
+			quaternionMsgToTF(savedPose.orientation,savedQ);
+
+
+			// the tf::Quaternion has a method to acess roll pitch and yaw
+			double roll, pitch, yaw;
+			tf::Matrix3x3(savedQ).getRPY(roll, pitch, yaw);
+
+			// the found angles are written in a geometry_msgs::Vector3
+			geometry_msgs::Vector3 rpy;
+			//    rpy.x = roll;
+			//   rpy.y = pitch;
+			//  rpy.z = yaw;
+
+
+			//republish saved raw loc
+
+double clearDist=.2;
+double hingeX =-.1016;//meters
+double hingeZ=.0216;//meters
+double touchCorrection =0;
+			double fixRoll =degTorad(135.0);
+double hingeAngle = degTorad(90.0);
+			static tf::TransformBroadcaster br2;
+			tf::Transform transf;
+			transf.setOrigin(tf::Vector3(x,y,z));
+			transf.setRotation(savedQ);
+			br2.sendTransform(tf::StampedTransform(transf, ros::Time::now(), "base_link","flap_raw"));
+
+
+
+			//publish roll fixed
+
+			transf.setOrigin(tf::Vector3(0,0,0));
+			tf::Quaternion q_rot = tf::createQuaternionFromRPY(0,0,fixRoll);
+			transf.setRotation(q_rot);
+			br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_raw","flap_fixed"));
+
+			//publish hinge
+			transf.setOrigin(tf::Vector3(hingeX,0,hingeZ));
+			q_rot = tf::createQuaternionFromRPY(0,hingeAngle,0);
+			transf.setRotation(q_rot);
+			br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_fixed","flap_hinge"));
+
+
+			//touching
+			transf.setOrigin(tf::Vector3(-hingeX,0,-hingeZ+touchCorrection));
+			q_rot = tf::createQuaternionFromRPY(0,0,0);
+			transf.setRotation(q_rot);
+			br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_hinge","flap_touching"));
+
+
+			//clearance
+			transf.setOrigin(tf::Vector3(0,0,-clearDist));
+			q_rot = tf::createQuaternionFromRPY(0,0,0);
+			transf.setRotation(q_rot);
+			br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_touchingA","flap_clearance"));
+
+/*
+			//touching
+			transf.setOrigin(tf::Vector3(-hingeX,0,-hingeZ+touchCorrection));
+			q_rot = tf::createQuaternionFromRPY(0,0,0);
+			transf.setRotation(q_rot);
+			br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_hinge","flap_touchingB"));
+
+			//clearance
+			transf.setOrigin(tf::Vector3(0,0,-clearDist));
+			q_rot = tf::createQuaternionFromRPY(0,0,0);
+			transf.setRotation(q_rot);
+			br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_touchingA","flap_clearanceB"));
+
+*/
+
+}
 int main(int argc, char** argv){
 	ros::init(argc, argv, "my_tf_listener");
 
-	ros::NodeHandle node;
+	ros::NodeHandle nh;
 
+
+
+
+	
 	tf::TransformListener listener;
-	geometry_msgs::Pose savedPose;
 	bool savedFlag=false;
-	while (node.ok()){
+	while (nh.ok()){
 		tf::StampedTransform transform;
 		if(savedFlag==false){
 			try{
-				ros::Time now =ros::Time::now();
+				ros::Time now =ros::Time(0);
 				
 				listener.waitForTransform("/base_link","/flap_raw",now,ros::Duration(3.0));
 
@@ -43,8 +133,8 @@ int main(int argc, char** argv){
 
 				quaternionTFToMsg(rot,savedPose.orientation);
 
-
-				//savedFlag=true;
+				ROS_INFO("SAVING TF");
+				savedFlag=true;
 
 			}
 			catch (tf::TransformException ex){
@@ -52,57 +142,12 @@ int main(int argc, char** argv){
 				ros::Duration(1.0).sleep();
 			}
 		}else{
-
-
-			int x=savedPose.position.x;
-			int y=savedPose.position.y;
-			int z=savedPose.position.z;
-
-			tf::Quaternion savedQ;
-			quaternionMsgToTF(savedPose.orientation,savedQ);
-
-
-			// the tf::Quaternion has a method to acess roll pitch and yaw
-			double roll, pitch, yaw;
-			tf::Matrix3x3(savedQ).getRPY(roll, pitch, yaw);
-
-			// the found angles are written in a geometry_msgs::Vector3
-			geometry_msgs::Vector3 rpy;
-			//    rpy.x = roll;
-			//   rpy.y = pitch;
-			//  rpy.z = yaw;
-
-
-			//republish saved raw loc
-
-			float fixRoll =1.5707963;
-			static tf::TransformBroadcaster br;
-			tf::Transform transf;
-			transf.setOrigin(tf::Vector3(x,y,z));
-			transf.setRotation(savedQ);
-			br.sendTransform(tf::StampedTransform(transf, ros::Time::now(), "camera_depth_optical_frame","flap_raw"));
+ROS_INFO("calling");
+ros::Timer timer = nh.createTimer(ros::Duration(0.1), timerCallback);
 
 
 
-			//publish roll fixed
-
-			tf::Transform rollFixed;
-			rollFixed.setOrigin(tf::Vector3(0,0,0));
-			tf::Quaternion q_rot = tf::createQuaternionFromRPY(roll,pitch,yaw+fixRoll);
-			rollFixed.setRotation(q_rot);
-			br.sendTransform(tf::StampedTransform(rollFixed,ros::Time::now(), "flap_raw","flap_fixed"));
-
-			//publish hinge
-
-			tf::Transform hinge;
-			hinge.setOrigin(tf::Vector3(.1,0,.1));
-			q_rot = tf::createQuaternionFromRPY(0,0,0);
-			hinge.setRotation(q_rot);
-			br.sendTransform(tf::StampedTransform(hinge,ros::Time::now(), "flap_fixed","flap_hinge"));
-
-
-
-
+ros::spin();
 
 		}
 
