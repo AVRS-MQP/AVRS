@@ -102,9 +102,6 @@ int main(int argc, char** argv){
 
 	ros::NodeHandle nh;
 
-
-
-
 	
 	tf::TransformListener listener;
 	bool savedFlag=false;
@@ -130,7 +127,6 @@ int main(int argc, char** argv){
 				tf::Quaternion rot=transform.getRotation();
 
 
-
 				quaternionTFToMsg(rot,savedPose.orientation);
 
 				ROS_INFO("SAVING TF");
@@ -144,7 +140,6 @@ int main(int argc, char** argv){
 		}else{
 ROS_INFO("calling");
 ros::Timer timer = nh.createTimer(ros::Duration(0.1), timerCallback);
-
 
 
 ros::spin();
