@@ -10,7 +10,8 @@
 using namespace std;
 using namespace cv;
 
-float rawX, rawY;
+float rawX = 0;
+float rawY = 0;
 
 cv::Mat getCircles(cv::Mat img){
   vector<Vec3f> circles;
@@ -20,8 +21,8 @@ cv::Mat getCircles(cv::Mat img){
 
   cvtColor(img, img, CV_GRAY2BGR );
 
-  rawX = cvRound(circles[0][0]);
-  rawY = cvRound(circles[0][1]);
+  //rawX = cvRound(circles[0][0]);
+  //rawY = cvRound(circles[0][1]);
 
   // Draw the circles detected
   for( size_t i = 0; i < circles.size(); i++ )
@@ -81,23 +82,49 @@ cv::Mat imageTransform(cv::Mat img){
   return img;
 }
 
-
+//FOR CAMERA USE
 void getLiveImage(const sensor_msgs::ImageConstPtr& msg)
 {
+
+  printf("test\n");
   cv::Mat image = cv_bridge::toCvShare(msg, "bgr8")->image;
+
+
+  printf("test2\n");
+  // node handler
+  ros::NodeHandle n;
+  ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
+
+  if(!image.data){
+    printf("oh no\n");
+    return;
+  }
+
+  float imgW = image.size().width;
+  float imgH = image.size().height;
+ 
+  printf("%f, %f\n", imgW, imgH);
 
   image = imageTransform(image);
   image = findFlap(image);
 
+  /*geometry_msgs::Pose pose;
+  pose.position.x = rawX/imgW;
+  pose.position.y = rawY/imgH;*/
+
   imshow("flap", image);
   waitKey(0);
+
+  //pub.publish(pose);
+
+  //ros::spin();
 }
 
 
 int main(int argc, char **argv)
 {
  
- //initialize node
+  //initialize node
   ros::init(argc, argv, "cv_node");
 
   // node handler
@@ -109,17 +136,12 @@ int main(int argc, char **argv)
   // subsribe topic
   ros::Subscriber sub = n.subscribe("/cv_camera/image_raw", 1000, getLiveImage);
 
-//  ros::spin();
+  ros::spin();
 
-
+/*
   //FOR SAVED IMAGE
 
   cv::Mat img = imread("test_image_1.png");
-
-  if(!img.data){
-    printf("oh no\n");
-    return -1;
-  }
 
   float imgW = img.size().width;
   float imgH = img.size().height;
@@ -142,7 +164,7 @@ int main(int argc, char **argv)
 
   ros::spin();
 
-  //printf("%d\n", findFlap(img));
+  //printf("%d\n", findFlap(img));*/
 
   return 0;
 }
