@@ -3,6 +3,8 @@
 
  <node pkg="tf" type="static_transform_publisher" name="kinect" args="-.50 .45 .580 -1.5708 0 0 base_link camera_link 1000"/>
 
+ <node pkg="tf" type="static_transform_publisher" name="kinect2" args="0 0 0 1.5708 0 1.5708  camera_link camera_link2 1000"/>
+
  <node pkg="tf" type="static_transform_publisher" name="camera" args=".1 0 .1 0 0 0 link_6 arm_camera 1"/>
 
  <node pkg="tf" type="static_transform_publisher" name="tool_change" args=".75 -.5 .5 -1.5708  3.1416 0 base_link tool_change_clearance 1"/>

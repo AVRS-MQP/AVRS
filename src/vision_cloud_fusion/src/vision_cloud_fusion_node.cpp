@@ -84,6 +84,16 @@ ros::Publisher cloud_pub;
 ros::Publisher cloud_pub2;//debug pub
 ros::Publisher cloud_pub3;//multi debug pubs
 
+
+double degTorad(double deg){
+        return (deg*(M_PI/180));
+}
+
+double radTodeg(double rad){
+        return (rad*(180/M_PI));
+}
+
+
 static int debugLevel =2;
 class Fusion{
   private:
@@ -99,7 +109,7 @@ class Fusion{
       pcl::Vertices vt;
 
       //---Crop a cylinder out of the point cloud
-      float x = -0.25;
+      float x = .25;//-.25
       float y = -0.06;
       float z = 0; 
       float rad = .175;//radius//.1
@@ -223,18 +233,37 @@ class Fusion{
 	    << coefficients->values[3] << std::endl;
 	}
 	// vars for pose
-	float roll=0;
-	float pitch=0;
-	float yaw=0;
+	double roll=0;
+	double pitch=0;
+	double yaw=0;
 	//calc angles rpy from slopes xyz
 	// note abc not associated with angles of thier axis
 
 
 	//WAS: 1, 2 ,0
+	//best 0, 1, 2
 	roll=atan2(coefficients->values[0],1);
 	pitch=atan2(coefficients->values[1],1);
-	yaw=atan2(coefficients->values[2],1);//seems correct
+	yaw=atan2(coefficients->values[2],1);
 
+	roll=atan(coefficients->values[1]);
+	pitch=atan(coefficients->values[0]);
+	yaw=atan(coefficients->values[2]);
+
+pitch=-pitch;
+
+//	roll=atan2((coefficients->values[0]/1),1);
+//	pitch=atan2((coefficients->values[1]/1),1);
+//	yaw=atan2((coefficients->values[2]/1),1);
+
+
+// fix xyz rpy
+
+ROS_INFO("R: %f,P: %f,Y: %f", radTodeg(roll), radTodeg(pitch), radTodeg(yaw)); 
+
+//roll=0;//actually doing rotation about x
+//pitch=degTorad(-10);//actually dong rotation about y
+yaw=degTorad(0);// actually doing rotation about z
 	//print all the inliers
 	if(debugLevel>=3){
 	  std::cerr << "Model inliers: " << inliers->indices.size () << std::endl;
@@ -254,7 +283,8 @@ class Fusion{
 	//other values tbd if set here
 	x=pMin.x+((pMax.x-pMin.x)/2);
 	z=pMin.z+((pMax.z-pMin.z)/2);
-
+y=-y;
+x=-x;
 
 	//mess with orientation
 
@@ -303,7 +333,7 @@ class Fusion{
 	tf::Transform transf;
 	transf.setOrigin(tf::Vector3(x,y,z));
 	transf.setRotation(q_rot);
-	br.sendTransform(tf::StampedTransform(transf, ros::Time::now(), "camera_depth_optical_frame","flap_raw"));
+	br.sendTransform(tf::StampedTransform(transf, ros::Time::now(), "camera_link2","flap_raw"));
 /*
 	float clearDist=.2;
 	tf::Transform clear;

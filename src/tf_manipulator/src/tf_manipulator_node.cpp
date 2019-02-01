@@ -44,22 +44,24 @@ double clearDist=.2;
 double hingeX =-.1016;//meters
 double hingeZ=.0216;//meters
 double touchCorrection =0;
-			double fixRoll =degTorad(135.0);
-double hingeAngle = degTorad(90.0);
+			double fixRoll =degTorad(0);//135
+double fixPitch =degTorad(0);//x rot
+double fixYaw = degTorad(0);//y rot
+double hingeAngle = degTorad(0);//z rot
 			static tf::TransformBroadcaster br2;
 			tf::Transform transf;
 			transf.setOrigin(tf::Vector3(x,y,z));
 			transf.setRotation(savedQ);
-			br2.sendTransform(tf::StampedTransform(transf, ros::Time::now(), "base_link","flap_raw"));
+			br2.sendTransform(tf::StampedTransform(transf, ros::Time::now(), "base_link","flap_saved"));
 
 
 
 			//publish roll fixed
 
 			transf.setOrigin(tf::Vector3(0,0,0));
-			tf::Quaternion q_rot = tf::createQuaternionFromRPY(0,0,fixRoll);
+			tf::Quaternion q_rot = tf::createQuaternionFromRPY(fixRoll,fixPitch,fixYaw);
 			transf.setRotation(q_rot);
-			br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_raw","flap_fixed"));
+			br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_saved","flap_fixed"));
 
 			//publish hinge
 			transf.setOrigin(tf::Vector3(hingeX,0,hingeZ));
@@ -79,7 +81,7 @@ double hingeAngle = degTorad(90.0);
 			transf.setOrigin(tf::Vector3(0,0,-clearDist));
 			q_rot = tf::createQuaternionFromRPY(0,0,0);
 			transf.setRotation(q_rot);
-			br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_touchingA","flap_clearance"));
+			br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_touching","flap_clearance"));
 
 /*
 			//touching
