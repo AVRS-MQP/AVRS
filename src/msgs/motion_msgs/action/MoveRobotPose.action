@@ -1,0 +1,11 @@
+#goal definition
+geometry_msgs/PoseStamped target
+string frame
+int32 mode
+---
+#result definition
+int32 statusCode
+---
+#feedback
+float32 current 
+
