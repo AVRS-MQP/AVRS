@@ -109,7 +109,7 @@ class Fusion{
       pcl::Vertices vt;
 
       //---Crop a cylinder out of the point cloud
-      float x = .25;//-.25
+      float x = -.5;//-.25
       float y = -0.06;
       float z = 0; 
       float rad = .175;//radius//.1

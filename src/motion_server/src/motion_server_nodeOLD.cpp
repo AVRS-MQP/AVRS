@@ -22,7 +22,7 @@
 //#include <moveit/planning_interface/move_group.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 
-#include <motion_msgs/MoveRobotQuatAction.h>
+#include <motion_msgs/MoveRobotAction.h>
 
 //general
 #include <math.h>
@@ -33,31 +33,31 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
 
-class MoveRobotQuatAction
+class MoveRobotAction
 {
   protected:
 
     ros::NodeHandle nh_;
-    actionlib::SimpleActionServer<motion_msgs::MoveRobotQuatAction> as_; // NodeHandle instance must be created before this line. Otherwise strange error occurs.
+    actionlib::SimpleActionServer<motion_msgs::MoveRobotAction> as_; // NodeHandle instance must be created before this line. Otherwise strange error occurs.
     std::string action_name_;
     // create messages that are used to published feedback/result
-    motion_msgs::MoveRobotQuatFeedback feedback_;
-    motion_msgs::MoveRobotQuatResult result_;
+    motion_msgs::MoveRobotFeedback feedback_;
+    motion_msgs::MoveRobotResult result_;
 
   public:
 
-    MoveRobotQuatAction(std::string name) :
-      as_(nh_, name, boost::bind(&MoveRobotQuatAction::executeCB, this, _1), false),
+    MoveRobotAction(std::string name) :
+      as_(nh_, name, boost::bind(&MoveRobotAction::executeCB, this, _1), false),
       action_name_(name)
   {
     as_.start();
   }
 
-    ~MoveRobotQuatAction(void)
+    ~MoveRobotAction(void)
     {
     }
 
-    void executeCB(const motion_msgs::MoveRobotQuatGoalConstPtr &goal)
+    void executeCB(const motion_msgs::MoveRobotGoalConstPtr &goal)
     {
       // helper variables
       ros::Rate r(1);
@@ -72,44 +72,41 @@ class MoveRobotQuatAction
        */
 
       ROS_INFO("%s: ExcutingCB: X:%f Y:%f Z:%f ",action_name_.c_str(),goal->x,goal->y,goal->z);
-	std::string group="manipulator";
-	//create quaternion
-	tf::Quaternion q_rot;
-	tf::TransformListener listener;
+      std::string group="manipulator";
+      //create quaternion
+      tf::Quaternion q_rot;
+      tf::TransformListener listener;
 
-	float roll, pitch, yaw, x, y, z, w;
-	//pull all the values from goal
-	roll=goal->roll;
-	pitch=goal->pitch;
-	yaw=goal->yaw;
-	w = goal->w;
-	x=goal->x;
-	y=goal->y;
-	z=goal->z;
-	group=goal->frame;
-	ROS_INFO("t %f u %f v %f w %f", roll, pitch, yaw, w);
+      float roll, pitch, yaw, x, y, z;
+      //pull all the values from goal
+      roll=goal->roll;
+      pitch=goal->pitch;
+      yaw=goal->yaw;
+      x=goal->x;
+      y=goal->y;
+      z=goal->z;
+      group=goal->frame;
+      //convert deg to rad
+      roll=roll*(M_PI/180);
+      pitch=pitch*(M_PI/180);
+      yaw=yaw*(M_PI/180);
 
-	//create and fill pose	
-	geometry_msgs::Pose poseEOAT;
-	quaternionTFToMsg(q_rot,poseEOAT.orientation);
-	q_rot.normalize();
-	poseEOAT.position.x= x;
-	poseEOAT.position.y= y;
-	poseEOAT.position.z= z;
+      //create and fill pose	
+      q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);//roll(x), pitch(y), yaw(z),
+      geometry_msgs::Pose poseEOAT;
+      quaternionTFToMsg(q_rot,poseEOAT.orientation);
+      poseEOAT.position.x= x;
+      poseEOAT.position.y= y;
+      poseEOAT.position.z= z;
+      //setup move_group and run 
+      std::string base_frame = "/base_link";
 
-	poseEOAT.orientation.x = roll;
-	poseEOAT.orientation.y = pitch;
-	poseEOAT.orientation.z = yaw;
-	poseEOAT.orientation.w = w;
-	
-	//setup move_group and run 
-	std::string base_frame = "/base_link";
+      geometry_msgs::Pose move_target = poseEOAT;
+      moveit::planning_interface::MoveGroupInterface move_group(group);
+      // Plan for robot to move to part
 
-	geometry_msgs::Pose move_target = poseEOAT;
-	moveit::planning_interface::MoveGroupInterface move_group(group);
-	// Plan for robot to move to part
+      moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
-	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
 
       //ros::Publisher display_publisher = nh_.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
@@ -131,9 +128,7 @@ double status;
 	int status;
 	move_group.move();
 	success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-      }
-
-  else if(mode==2){
+      }else if(mode==2){
 
 	std::vector< geometry_msgs::Pose > poses;
 
@@ -159,8 +154,59 @@ poses.push_back(poseEOAT);
 	//	move_group.move();
 	success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 
-      }
-else if (mode==3){//queue a point draw DANGER ZONE 3 point touch
+      }else if (mode==3){//queue a point draw DANGER ZONE 3 point touch
+
+	std::vector< geometry_msgs::Pose > poses;
+
+
+	//moveit_msgs::GetCartesianPath srv;
+	//srv.request.wait_for_execution = true;
+
+	//ros::ServiceClient executeKnownTrajectoryServiceClient = nh_.serviceClient<moveit_msgs::GetCartesianPathExecuteKnownTrajectory>("/execute_kinematic_path");
+
+
+geometry_msgs::Pose poseClear;
+geometry_msgs::Pose poseTouch;
+
+
+quaternionTFToMsg(q_rot,poseClear.orientation);
+quaternionTFToMsg(q_rot,poseTouch.orientation);
+
+poseClear.position.x=goal->x;
+poseClear.position.y=goal->y;
+poseClear.position.z=.04;//magic
+
+poseTouch.position.x=goal->x;
+poseTouch.position.y=goal->y;
+poseTouch.position.z=.015;//magic
+
+ROS_WARN("MODE 3");
+
+
+
+poses.push_back(poseClear);
+poses.push_back(poseTouch);
+poses.push_back(poseClear);
+
+
+
+
+//poses.push_back(poseEOAT);
+
+
+
+
+
+	status=	move_group.computeCartesianPath(poses, 0.005, 0.0, trajectory, true);
+
+
+	my_plan.trajectory_=trajectory;
+
+	move_group.execute(my_plan);
+	//	move_group.move();
+	success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+
+
 
 
 
@@ -228,7 +274,7 @@ int main(int argc, char** argv)
   //async_spinner.start();
   ros::init(argc, argv, "motion");
 
-  MoveRobotQuatAction motion("motion");
+  MoveRobotAction motion("motion");
   ros::spin();
   //ros::waitForShutdown();
 

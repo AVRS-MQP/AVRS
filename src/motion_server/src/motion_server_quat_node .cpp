@@ -57,7 +57,7 @@ class MoveRobotQuatAction
     {
     }
 
-    void executeCB(const motion_msgs::MoveRobotQuatGoalConstPtr &goal)
+    void executeCB(const motion_msgs::MoveRobotGoalConstPtr &goal)
     {
       // helper variables
       ros::Rate r(1);
@@ -77,7 +77,7 @@ class MoveRobotQuatAction
 	tf::Quaternion q_rot;
 	tf::TransformListener listener;
 
-	float roll, pitch, yaw, x, y, z, w;
+	float roll, pitch, yaw, x, y, z;
 	//pull all the values from goal
 	roll=goal->roll;
 	pitch=goal->pitch;
@@ -92,7 +92,7 @@ class MoveRobotQuatAction
 	//create and fill pose	
 	geometry_msgs::Pose poseEOAT;
 	quaternionTFToMsg(q_rot,poseEOAT.orientation);
-	q_rot.normalize();
+	q_rot.normallize();
 	poseEOAT.position.x= x;
 	poseEOAT.position.y= y;
 	poseEOAT.position.z= z;
@@ -110,6 +110,7 @@ class MoveRobotQuatAction
 	// Plan for robot to move to part
 
 	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
 
 
       //ros::Publisher display_publisher = nh_.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);

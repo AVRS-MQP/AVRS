@@ -10,6 +10,7 @@ add_action_files(
   MoveRobot.action
   MoveRobotFast.action
   MoveRobotPose.action
+  MoveRobotQuat.action
 )
 
 generate_messages(

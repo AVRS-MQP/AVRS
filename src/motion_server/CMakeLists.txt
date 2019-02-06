@@ -30,16 +30,16 @@ catkin_package(
     motion_msgs	
 )
 
-#add_executable(motion_server_node src/motion_server_node.cpp)
-add_executable(motion_server_pose_node src/motion_server_pose_node.cpp)
+add_executable(motion_server_node src/motion_server_node.cpp)
+#add_executable(motion_server_quat_node src/motion_server_quat_node.cpp)
 
-#add_dependencies(motion_server_node ${catkin_EXPORTED_TARGETS})
-add_dependencies(motion_server_pose_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(motion_server_node ${catkin_EXPORTED_TARGETS})
+#add_dependencies(motion_server_quat_node ${catkin_EXPORTED_TARGETS})
 
 
 target_link_libraries(
-  #motion_server_node
-  motion_server_pose_node
+  motion_server_node
+  #motion_server_quat_node
     ${catkin_LIBRARIES}
 )
 
