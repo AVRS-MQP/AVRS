@@ -4,10 +4,12 @@ project(smach_machine)
 find_package(catkin REQUIRED COMPONENTS actionlib_msgs)
 
 ## Generate actions in the 'action' folder
-#add_action_files(
-#  FILES
-#  Test.action
-#)
+add_action_files(
+  FILES
+  # Test.action
+)
+
+catkin_python_setup()
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
