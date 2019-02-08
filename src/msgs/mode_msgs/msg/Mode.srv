@@ -1,0 +1,6 @@
+string input
+int alt_input
+---
+string output
+bool done
+

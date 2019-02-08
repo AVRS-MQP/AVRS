@@ -1,0 +1,14 @@
+<!--Launch file for nodelets-->
+<!--see readme section on launch files for details on how to use file-->
+<!--maintainer email="avrs@wpi.edu">Matt Fortmeyer</maintainer-->
+<launch>
+
+<!--Load settings as parameters from .yaml-->
+  <group ns="settings">
+    <rosparam command="load" file="$(find cv)/launch/cv_settings.yaml" />
+  </group>
+
+  <node name="cvnode" pkg="cv" type="cv_node" output="screen">
+  </node>
+
+</launch>

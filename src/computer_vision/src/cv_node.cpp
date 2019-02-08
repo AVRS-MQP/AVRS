@@ -7,169 +7,202 @@
 #include <geometry_msgs/Pose.h>
 #include <fstream>
 
+
+//#include <opencv2/highgui/highgui.hpp>
+
+
 //cd ~/catkin_ws
 //rosrun opencv_example opencv_example_node
 
 using namespace std;
 using namespace cv;
 
-int mode = 1;
+int mode = 0;
 
 float rawX = 0;
 float rawY = 0;
 
 int filter = 7;
-int t_hold = 102;
+int t_hold = 140;
 int circlet = 65;
 
+image_transport::Publisher pub2;
+
 cv::Mat getCircles(cv::Mat img){
-  vector<Vec3f> circles;
+	vector<Vec3f> circles;
 
-  // Apply the Hough Transform to find the circles
-  HoughCircles(img, circles, CV_HOUGH_GRADIENT, 1, img.rows/8, 200, circlet, 0, 0);
+	// Apply the Hough Transform to find the circles
+	HoughCircles(img, circles, CV_HOUGH_GRADIENT, 1, img.rows/8, 200, circlet, 0, 0);
 
-  cvtColor(img, img, CV_GRAY2BGR );
+	cvtColor(img, img, CV_GRAY2BGR );
 
-  //rawX = cvRound(circles[0][0]);
-  //rawY = cvRound(circles[0][1]);
+	//rawX = cvRound(circles[0][0]);
+	//rawY = cvRound(circles[0][1]);
 
-  // Draw the circles detected
-  for( size_t i = 0; i < circles.size(); i++ )
-  {
-      Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
-      int radius = cvRound(circles[i][2]);
+	// Draw the circles detected
+	for( size_t i = 0; i < circles.size(); i++ )
+	{
+		Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+		int radius = cvRound(circles[i][2]);
 
-      printf("%d, %d, %d\n", cvRound(circles[i][0]), cvRound(circles[i][1]), cvRound(circles[i][2]));
-      // circle center
-      circle(img, center, 3, Scalar(0,255,0), -1, 8, 0 );
-      // circle outline
-      circle(img, center, radius, Scalar(0,0,255), 3, 8, 0 );
-   }
+		printf("%d, %d, %d\n", cvRound(circles[i][0]), cvRound(circles[i][1]), cvRound(circles[i][2]));
+		// circle center
+		circle(img, center, 3, Scalar(0,255,0), -1, 8, 0 );
+		// circle outline
+		circle(img, center, radius, Scalar(0,0,255), 3, 8, 0 );
+	}
 
-  printf("%lu\n", circles.size());
+	printf("%lu\n", circles.size());
 
-  return img;
+	return img;
 }
 
 cv::Mat findFlap(cv::Mat img){
 
-  cv::Mat detected_edges;
+	cv::Mat detected_edges;
 
-  //clean up
-  blur(img, detected_edges, Size(filter, filter) );
+	//clean up
+	blur(img, detected_edges, Size(filter, filter) );
 
-  //convert to edges
+	//convert to edges
 
-  imshow( "b/w blur", detected_edges);
+	//imshow( "b/w blur", detected_edges);
 
-  Canny(detected_edges, detected_edges, t_hold, t_hold*3, 5);
+	Canny(detected_edges, detected_edges, t_hold, t_hold*3, 5);
 
-  /// Using Canny's output as a mask, we display our result
-  Mat dst;
-  dst = Scalar::all(0);
+	/// Using Canny's output as a mask, we display our result
+	Mat dst;
+	dst = Scalar::all(0);
 
-  img.copyTo( dst, detected_edges);
-  //imshow( window_name, dst );
+	img.copyTo( dst, detected_edges);
+	//imshow( window_name, dst );
 
-  dst = getCircles(dst);
+	dst = getCircles(dst);
 
-  return dst;
+	return dst;
 }
 
 
 //Make any neccessary transformations
 cv::Mat imageTransform(cv::Mat img){
 
-  //convert to grayscale
-  cvtColor(img, img, CV_BGR2GRAY );
+	//convert to grayscale
+	cvtColor(img, img, CV_BGR2GRAY );
 
-  //add blur
-  //GaussianBlur(img, img, Size(9, 9), 2, 2);
+	//add blur
+	//GaussianBlur(img, img, Size(9, 9), 2, 2);
 
-  return img;
+	return img;
 }
 
 //FOR CAMERA USE
 void getLiveImage(const sensor_msgs::ImageConstPtr& msg)
 {
 
-  printf("test\n");
-  cv::Mat image = cv_bridge::toCvShare(msg, "bgr8")->image;
+	printf("test\n");
+	cv::Mat image = cv_bridge::toCvShare(msg, "bgr8")->image;
 
 
-  printf("test2\n");
-  // node handler
-  ros::NodeHandle n;
-  ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
+	printf("test2\n");
+	// node handler
+	ros::NodeHandle n;
+	ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
 
-  if(!image.data){
-    printf("oh no\n");
-    return;
-  }
+	if(!image.data){
+		printf("oh no\n");
+		return;
+	}
 
-  float imgW = image.size().width;
-  float imgH = image.size().height;
- 
-  printf("%f, %f\n", imgW, imgH);
+	float imgW = image.size().width;
+	float imgH = image.size().height;
 
-  image = imageTransform(image);
-  image = findFlap(image);
+	printf("%f, %f\n", imgW, imgH);
 
-  /*geometry_msgs::Pose pose;
-  pose.position.x = rawX/imgW;
-  pose.position.y = rawY/imgH;*/
+	image = imageTransform(image);
+	image = findFlap(image);
 
-  imshow("flap", image);
-  waitKey(0);
+	/*geometry_msgs::Pose pose;
+	  pose.position.x = rawX/imgW;
+	  pose.position.y = rawY/imgH;*/
 
-  //pub.publish(pose);
+	//imshow("flap", image);
+	//waitKey(0);
 
-  //ros::spin();
+
+	//publish image to ros topic 
+	//sensor_msgs::Image imgmsg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg;
+	cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
+	cv_ptr->encoding = "bgr8";
+	cv_ptr->image = image;
+	pub2.publish(cv_ptr->toImageMsg());		
+	ROS_INFO("HEREX");
+	//	while(ros::ok){
+	//pub2.publish(imgmsg);
+	//		}
+
+
+	//pub.publish(pose);
+
+	//ros::spin();
 }
 
 
 int main(int argc, char **argv)
 {
- 
-  //initialize node
-  ros::init(argc, argv, "cv_node");
 
-  // node handler
-  ros::NodeHandle n;
+	//initialize node
+	ros::init(argc, argv, "cv_node");
 
-  //publisher
-  ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
+	// node handler
+	ros::NodeHandle n;
 
 
-  if(mode == 0){
-    // subsribe topic
-    ros::Subscriber sub = n.subscribe("/cv_camera/image_raw", 1, getLiveImage);
+	//load setting from .yaml
+	n.getParam("settings/mode", mode);
+	n.getParam("settings/filter", filter);
+	n.getParam("settings/t_hold", t_hold);
+	n.getParam("settings/circlet", circlet);
 
-    ros::spin();
-  } else{
-    //FOR SAVED IMAGE
+	//publisher
+	ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
 
-    cv::Mat img = imread("test_image_2.png");
 
-    float imgW = img.size().width;
-    float imgH = img.size().height;
-    printf("%f, %f\n", imgW, imgH);
 
-    img = imageTransform(img);
-    img = findFlap(img);
+	image_transport::ImageTransport it(n);
+	pub2 = it.advertise("arm_camera/image", 1);
 
-    printf("%f, %f\n", rawX/imgW, rawY/imgH);
+	if(mode == 0){
+		// subsribe topic
+		while(ros::ok){
 
-    geometry_msgs::Pose msg;
-    msg.position.x = rawX/imgW;
-    msg.position.y = rawY/imgH;
+			ros::Subscriber sub = n.subscribe("/cv_camera/image_raw", 1, getLiveImage);
 
-    pub.publish(msg);
+			ros::spin();
+		}
+	} else{
+		//FOR SAVED IMAGE
 
-    imshow( "image", img);
-    waitKey(0);
+		cv::Mat img = imread("test_image_2.png");
 
-  }
+		float imgW = img.size().width;
+		float imgH = img.size().height;
+		printf("%f, %f\n", imgW, imgH);
 
-  return 0;
+		img = imageTransform(img);
+		img = findFlap(img);
+
+		printf("%f, %f\n", rawX/imgW, rawY/imgH);
+
+		geometry_msgs::Pose msg;
+		msg.position.x = rawX/imgW;
+		msg.position.y = rawY/imgH;
+
+		pub.publish(msg);
+
+		imshow( "image", img);
+		waitKey(0);
+
+	}
+
+	return 0;
 }
