@@ -7,17 +7,26 @@
 #include <geometry_msgs/Pose.h>
 #include <fstream>
 
+//cd ~/catkin_ws
+//rosrun opencv_example opencv_example_node
+
 using namespace std;
 using namespace cv;
 
+int mode = 1;
+
 float rawX = 0;
 float rawY = 0;
+
+int filter = 7;
+int t_hold = 102;
+int circlet = 65;
 
 cv::Mat getCircles(cv::Mat img){
   vector<Vec3f> circles;
 
   // Apply the Hough Transform to find the circles
-  HoughCircles(img, circles, CV_HOUGH_GRADIENT, 1, img.rows/8, 200, 105, 0, 0);
+  HoughCircles(img, circles, CV_HOUGH_GRADIENT, 1, img.rows/8, 200, circlet, 0, 0);
 
   cvtColor(img, img, CV_GRAY2BGR );
 
@@ -45,17 +54,15 @@ cv::Mat getCircles(cv::Mat img){
 cv::Mat findFlap(cv::Mat img){
 
   cv::Mat detected_edges;
-  int filter = 7;
 
   //clean up
   blur(img, detected_edges, Size(filter, filter) );
 
   //convert to edges
-  int val = 102;
 
   imshow( "b/w blur", detected_edges);
 
-  Canny(detected_edges, detected_edges, val, val*3, 5);
+  Canny(detected_edges, detected_edges, t_hold, t_hold*3, 5);
 
   /// Using Canny's output as a mask, we display our result
   Mat dst;
@@ -133,38 +140,36 @@ int main(int argc, char **argv)
   //publisher
   ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
 
-  // subsribe topic
-  ros::Subscriber sub = n.subscribe("/cv_camera/image_raw", 1000, getLiveImage);
 
-  ros::spin();
+  if(mode == 0){
+    // subsribe topic
+    ros::Subscriber sub = n.subscribe("/cv_camera/image_raw", 1, getLiveImage);
 
-/*
-  //FOR SAVED IMAGE
+    ros::spin();
+  } else{
+    //FOR SAVED IMAGE
 
-  cv::Mat img = imread("test_image_1.png");
+    cv::Mat img = imread("test_image_2.png");
 
-  float imgW = img.size().width;
-  float imgH = img.size().height;
-  printf("%f, %f\n", imgW, imgH);
+    float imgW = img.size().width;
+    float imgH = img.size().height;
+    printf("%f, %f\n", imgW, imgH);
 
-  img = imageTransform(img);
-  img = findFlap(img);
+    img = imageTransform(img);
+    img = findFlap(img);
 
-  printf("%f, %f\n", rawX/imgW, rawY/imgH);
+    printf("%f, %f\n", rawX/imgW, rawY/imgH);
 
-  geometry_msgs::Pose msg;
-  msg.position.x = rawX/imgW;
-  msg.position.y = rawY/imgH;
+    geometry_msgs::Pose msg;
+    msg.position.x = rawX/imgW;
+    msg.position.y = rawY/imgH;
 
-  pub.publish(msg);
-//  namedWindow( "Display window", WINDOW_AUTOSIZE );
+    pub.publish(msg);
 
-  imshow( "image", img);
-  waitKey(0);
+    imshow( "image", img);
+    waitKey(0);
 
-  ros::spin();
-
-  //printf("%d\n", findFlap(img));*/
+  }
 
   return 0;
 }
