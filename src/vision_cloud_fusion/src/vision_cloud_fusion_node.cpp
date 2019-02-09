@@ -104,16 +104,13 @@ static int debugLevel =2;//2 prints all things 3 ignores mode topic
 class Fusion{
   private:
     int myMode = 0;
-    bool computePose(){
-// 		void computePose(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)//OLD
+    //bool computePose(){
+		void computePose(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){//OLD
 
      
-
-      float myX=-.5;
-      float myY=-.06;
-
       ROS_WARN("MODE %d",myMode);
-      if(myMode==1||debugLevel==3){
+if(myMode==1){
+
 
 	//tf listener stup
 	// while(node.ok()){
@@ -125,8 +122,9 @@ class Fusion{
 	  listener.waitForTransform("/base_link","/flap_raw",now,ros::Duration(3.0));
 	  listener.lookupTransform("/base_link","/arm_camera",now,camera_transform);
 	  tf::Vector3 orig=camera_transform.getOrigin();
-	  myX=orig[0];
-	  myY=orig[1];
+	  float myX=orig[0];
+	  float myY=orig[1];
+	
 	}catch(tf::TransformException &ex){
 	  ROS_ERROR("%s",ex.what());
 	  ros::Duration(1.0).sleep();
@@ -137,7 +135,7 @@ class Fusion{
 
 	if(debugLevel >1){
 	  ROS_INFO("Size at start of computePose:");
-	  std::cout<< myCloud->size() <<std::endl;
+	  std::cout<< cloud->size() <<std::endl;
 	  ROS_INFO("Doing a little math...");
 	}
 	pcl::PointCloud<pcl::PointXYZ>::Ptr hullCloud(new pcl::PointCloud<pcl::PointXYZ>());
@@ -146,12 +144,12 @@ class Fusion{
 	pcl::Vertices vt;
 
 	//---Crop a cylinder out of the point cloud
-	float x = myX;//-.25,.5
-	float y = myY;//was -.06
+	float x = 0;//-.25,.5
+	float y = -.06;//was -.06
 	float z = 0; 
 	float rad = .175;//radius//.1
 	float dep =2;//depth
-
+	x=-x;
 	//build cylinder TODO move to helper function
 	hullCloud->push_back(pcl::PointXYZ(x,y,z));//center
 	hullCloud->push_back(pcl::PointXYZ(x+rad,y,z));//right
@@ -185,7 +183,7 @@ class Fusion{
 	//--perform actual filter
 	pcl::CropHull<pcl::PointXYZ> cropHull;//create the filter object
 	cropHull.setDim(3);//use a 3d hul
-	cropHull.setInputCloud(myCloud);//the cloud getting cropped
+	cropHull.setInputCloud(cloud);//the cloud getting cropped
 	cropHull.setHullIndices(vertices);//?
 	cropHull.setHullCloud(hullCloud);//the crop shape
 	cropHull.setCropOutside(true);//default is true, sets to remove outsid points
@@ -216,7 +214,7 @@ class Fusion{
 
 	  //---calculate normals
 	  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
-	  ne.setInputCloud (myCloud);
+	  ne.setInputCloud (cloud);
 
 	  // Create an empty kdtree representation, and pass it to the normal estimation object.
 	  // Its content will be filled inside the object, based on the given input dataset (as no other search surface is given).
@@ -305,9 +303,9 @@ class Fusion{
 	  if(debugLevel>=3){
 	    std::cerr << "Model inliers: " << inliers->indices.size () << std::endl;
 	    for (size_t i = 0; i < inliers->indices.size (); ++i)
-	      std::cerr << inliers->indices[i] << "    " << myCloud->points[inliers->indices[i]].x << " "
-		<< myCloud->points[inliers->indices[i]].y << " "
-		<< myCloud->points[inliers->indices[i]].z << std::endl;
+	      std::cerr << inliers->indices[i] << "    " << cloud->points[inliers->indices[i]].x << " "
+		<< cloud->points[inliers->indices[i]].y << " "
+		<< cloud->points[inliers->indices[i]].z << std::endl;
 	  }
 
 
@@ -347,14 +345,13 @@ class Fusion{
 
 	  br.sendTransform(tf::StampedTransform(transf, ros::Time::now(), "camera_link2","flap_raw"));
 	
-	return true;
+	//return true;
 
 	}else{//catches if the crop zone is not intersectin the car
 	  ROS_WARN("cropResult size zero");
 	//return false //optional tbd if useful?
 	}
-      }
-    }
+    }}
   public:
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr myCloud;//(new pcl::PointCloud<pcl::PointXYZ>);//create PCLXYZ
@@ -372,7 +369,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr myCloud;//(new pcl::PointCloud<pcl::PointXYZ
       if(debugLevel>2){
 	ROS_INFO("Size in cloud_cb:");
 	std::cout<< temp_cloud->size() <<std::endl;}
-   //   computePose(temp_cloud); MOVED TO SRV
+      computePose(temp_cloud); //MOVED TO SRV
 
 
 	//save my cloud to class object
@@ -404,17 +401,13 @@ NOT USED
     }
 */
     bool executeCB(mode_msgs::Mode::Request &req, mode_msgs::Mode::Response &res){
-	bool result= computePose();
+//	bool result= computePose();
 
+	myMode=req.input2;
 
-      if(strcmp(req.mode.c_str(),"find")==0){
-	myMode=1;
-}
-
-	res.done=result;
-	return result;	
+	//res.done=result;
+	return true;	
     }
-
 };
   int
 main (int argc, char** argv)
@@ -459,7 +452,7 @@ main (int argc, char** argv)
   //while(node.ok()){
   /*  tf::TransformListener listener;
       try{
-      listener.lookupTransform("/arm_camera","/camera_link",ros::Time(0),fusion.camera_transform);
+      listener.lookupTransform("/arm_camera","/camera_lin",ros::Time(0),fusion.camera_transform);
       }catch(tf::TransformException &ex){
       ROS_ERROR("%s",ex.what());
       ros::Duration(1.0).sleep();

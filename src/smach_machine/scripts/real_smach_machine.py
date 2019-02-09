@@ -33,7 +33,6 @@ from geometry_msgs.msg import (
 import mode_msgs
 from mode_msgs.srv import Mode  #
 
-
 from geometry_msgs.msg import PoseStamped
 
 from tf import TransformListener  # Autofills to this, and uses it in line 43 so why is it error flagged???
@@ -247,17 +246,33 @@ class Find3DFlap(smach.State):
     def execute(self, userdata):
         print("Waiting for fusion srv")
 
-        #todo http://wiki.ros.org/ROS/Tutorials/WritingServiceClient%28python%29
+        # todo http://wiki.ros.org/ROS/Tutorials/WritingServiceClient%28python%29
         rospy.wait_for_service('fusion')
 
         try:
             fuser = rospy.ServiceProxy('fusion', Mode)
-            result = fuser("find", 2)  # TODO Niko look here. Filled in second param to make it happy
+            tf_man = rospy.ServiceProxy('transform', Mode)
+
+            fuser("find", 1)
+            print("finding...")
+            rospy.sleep(6)
+            print("saving...")
+            tf_man("save", 1)
+            rospy.sleep(4)
+            print("publishing...")
+            tf_man("publish", 2)
+            rospy.sleep(4)
+            print("stoping fusion")
+            fuser("stop", 0)
+
+
             print("HereA")
+
         except rospy.ServiceException as e:
             print("Service call failed: %s" % e)
             print("HereB")
-            return 'flap_pose_saved'
+
+        return 'flap_pose_saved'
         # else:  #will run after except if no errors were raised
 
         # activator_pub = rospy.Publisher('point_cloud_mode', std_msgs.msg.String, queue_size=5)

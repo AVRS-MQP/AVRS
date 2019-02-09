@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   geometry_msgs
+  mode_msgs
 )
 
 #test
@@ -42,5 +43,7 @@ include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
 )
+
+add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 
