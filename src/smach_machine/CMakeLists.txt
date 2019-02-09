@@ -1,21 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(smach_machine)
 
-find_package(catkin REQUIRED COMPONENTS actionlib_msgs)
-
-## Generate actions in the 'action' folder
-add_action_files(
-  FILES
-  # Test.action
+find_package(catkin REQUIRED COMPONENTS actionlib_msgs
+mode_msgs
+motion_msgs
 )
 
-catkin_python_setup()
-
-## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  actionlib_msgs  # Or other packages containing msgs
-)
 
 ###################################
 ## catkin specific configuration ##
@@ -26,10 +16,17 @@ generate_messages(
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
+
+#TODO this but in python
+#add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES lib
-#  CATKIN_DEPENDS packages
+   CATKIN_DEPENDS 
+	message_runtime 
+	mode_msgs
+	motion_msgs
 #  DEPENDS system_lib
 )
 

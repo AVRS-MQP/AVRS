@@ -10,6 +10,7 @@ import actionlib_tutorials_msgs
 
 import motion_msgs
 from motion_msgs.msg import *
+
 from force_msgs.msg import LoadCellForces32
 
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
@@ -29,10 +30,13 @@ from geometry_msgs.msg import (
     Point,
     Quaternion,
 )
+import mode_msgs
+from mode_msgs.srv import Mode  #
+
 
 from geometry_msgs.msg import PoseStamped
 
-from tf import TransformListener
+from tf import TransformListener  # Autofills to this, and uses it in line 43 so why is it error flagged???
 
 
 def get_pose_from_tf(base_frame, pose_frame):
@@ -202,7 +206,6 @@ class ChargePort(smach.State):
         rospy.loginfo('Executing state OpenFlap')
 
         rospy.loginfo(userdata.move_pose)
-        rospy.loginfo('Exiting state machine')
         return 'outcome1'
 
 
@@ -242,26 +245,41 @@ class Find3DFlap(smach.State):
         self.tf = TransformListener()
 
     def execute(self, userdata):
-        activator_pub = rospy.Publisher('point_cloud_mode', std_msgs.msg.String, queue_size=5)
+        print("Waiting for fusion srv")
 
-        # mode 0 defult,1 create, 2 save
+        #todo http://wiki.ros.org/ROS/Tutorials/WritingServiceClient%28python%29
+        rospy.wait_for_service('fusion')
 
-        while not rospy.is_shutdown():
-            activator_pub.publish("find")  # create the flap pose
+        try:
+            fuser = rospy.ServiceProxy('fusion', Mode)
+            result = fuser("find", 2)  # TODO Niko look here. Filled in second param to make it happy
+            print("HereA")
+        except rospy.ServiceException as e:
+            print("Service call failed: %s" % e)
+            print("HereB")
+            return 'flap_pose_saved'
+        # else:  #will run after except if no errors were raised
 
-            try:
-                now=rospy.Time.now()
-                self.tf.waitForTransform("/base_link","/flap_raw",now,rospy.Duration(3.0))
-                self.tf.lookupTransform("/base_link", "/flap_raw",now)
+        # activator_pub = rospy.Publisher('point_cloud_mode', std_msgs.msg.String, queue_size=5)
 
-                activator_pub.publish("save")  # save it
-                rospy.sleep(6)
-                activator_pub.publish("publish")
-                return 'flap_pose_saved'
-            except(tf.LookupException, tf.ConnectivityException):
-                continue
-                print("looking for transform")
-                rospy.sleep(6)
+        # # mode 0 defult,1 create, 2 save
+        #
+        # while not rospy.is_shutdown():
+        #     activator_pub.publish("find")  # create the flap pose
+        #
+        #     try:
+        #         now=rospy.Time.now()
+        #         self.tf.waitForTransform("/base_link","/flap_raw",now,rospy.Duration(3.0))
+        #         self.tf.lookupTransform("/base_link", "/flap_raw",now)
+        #
+        #         activator_pub.publish("save")  # save it
+        #         rospy.sleep(6)
+        #         activator_pub.publish("publish")
+        #         return 'flap_pose_saved'
+        #     except(tf.LookupException, tf.ConnectivityException):
+        #         continue
+        #         print("looking for transform")
+        #         rospy.sleep(6)
 
 
 def main():

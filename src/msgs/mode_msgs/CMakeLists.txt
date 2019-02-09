@@ -10,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_service_files(
   DIRECTORY msg
   FILES
-  Directory.srv
+  Mode.srv
 )
 generate_messages(DEPENDENCIES std_msgs)
 

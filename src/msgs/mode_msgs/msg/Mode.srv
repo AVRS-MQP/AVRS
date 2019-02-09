@@ -1,5 +1,5 @@
-string input
-int alt_input
+string mode
+int32 input2
 ---
 string output
 bool done
