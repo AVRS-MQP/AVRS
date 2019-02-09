@@ -10,7 +10,7 @@
 using namespace std;
 using namespace cv;
 
-int mode = 1;
+int mode = 0;
 
 float rawX = 0;
 float rawY = 0;
@@ -26,6 +26,7 @@ float sumY = 0;
 int loop = 0;
 
 image_transport::Publisher pub2;
+image_transport::Publisher pub3;
 
 cv::Mat getCircles(cv::Mat img){
 	vector<Vec3f> circles;
@@ -46,6 +47,25 @@ cv::Mat getCircles(cv::Mat img){
 	} else{
 		printf("404 FLAP NOT FOUND\n");
 		return img;
+	}
+
+	if(loop == 10){
+		cv::Mat meanImg = img;
+		float deltaX = sumX/loop;
+		float deltaY = sumY/loop;
+
+		Point center(deltaX, deltaY);
+		printf("Test: deltax is %f, deltay is %f\n", deltaX, deltaY);
+		circle(meanImg, center, 3, Scalar(255,255,0), -1, 8, 0 );
+
+		cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
+		cv_ptr->encoding = "bgr8";
+		cv_ptr->image = meanImg;
+	
+		pub3.publish(cv_ptr->toImageMsg());
+
+		//imshow("average flap center", meanImg);
+		//waitKey(4010);
 	}
 
 	// Draw the circles detected
@@ -128,13 +148,6 @@ void getLiveImage(const sensor_msgs::ImageConstPtr& msg)
 	image = imageTransform(image);
 	image = findFlap(image);
 
-	/*geometry_msgs::Pose pose;
-	pose.position.x = rawX/imgX;
-	pose.position.y = rawY/imgY;*/
-
-	//imshow("flap", image);
-	//waitKey(0);
-
 
 	//publish image to ros topic 
 	//sensor_msgs::Image imgmsg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg;
@@ -143,7 +156,6 @@ void getLiveImage(const sensor_msgs::ImageConstPtr& msg)
 	cv_ptr->image = image;
 	
 	pub2.publish(cv_ptr->toImageMsg());		
-	ROS_INFO("HEREX");
 	//	while(ros::ok){
 	//pub2.publish(imgmsg);
 	//		}
@@ -199,8 +211,10 @@ int main(int argc, char **argv){
 	ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
 
 	image_transport::ImageTransport it(n);
+	image_transport::ImageTransport it2(n);
 	pub2 = it.advertise("arm_camera/image", 1);
-
+	pub3 = it2.advertise("arm_camera/average", 1);
+	
 	if(mode == 0){
 	  // subsribe topic
 	  while(ros::ok){
@@ -231,7 +245,7 @@ int main(int argc, char **argv){
 	  }
 	}
 	else{
-	  while(true){
+	  while(ros::ok){
 	  	loop++;
 	    getTestImage();
 	    sleep(1);
