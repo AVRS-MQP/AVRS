@@ -7,24 +7,23 @@
 #include <geometry_msgs/Pose.h>
 #include <fstream>
 
-
-//#include <opencv2/highgui/highgui.hpp>
-
-
-//cd ~/catkin_ws
-//rosrun opencv_example opencv_example_node
-
 using namespace std;
 using namespace cv;
 
-int mode = 0;
+int mode = 1;
 
 float rawX = 0;
 float rawY = 0;
+int imgX = 0;
+int imgY = 0;
 
 int filter = 7;
-int t_hold = 140;
+int t_hold = 100;
 int circlet = 65;
+
+float sumX = 0;
+float sumY = 0;
+int loop = 0;
 
 image_transport::Publisher pub2;
 
@@ -32,12 +31,22 @@ cv::Mat getCircles(cv::Mat img){
 	vector<Vec3f> circles;
 
 	// Apply the Hough Transform to find the circles
+	printf("circlet is %d\n", circlet);
+	printf("mode is %d\n", mode);
 	HoughCircles(img, circles, CV_HOUGH_GRADIENT, 1, img.rows/8, 200, circlet, 0, 0);
 
 	cvtColor(img, img, CV_GRAY2BGR );
 
-	//rawX = cvRound(circles[0][0]);
-	//rawY = cvRound(circles[0][1]);
+	if(circles.size() >= 1){
+		rawX = cvRound(circles[0][0]);
+		rawY = cvRound(circles[0][1]);
+
+		sumX += cvRound(circles[0][0]);
+		sumY += cvRound(circles[0][1]);
+	} else{
+		printf("404 FLAP NOT FOUND\n");
+		return img;
+	}
 
 	// Draw the circles detected
 	for( size_t i = 0; i < circles.size(); i++ )
@@ -113,17 +122,15 @@ void getLiveImage(const sensor_msgs::ImageConstPtr& msg)
 		return;
 	}
 
-	float imgW = image.size().width;
-	float imgH = image.size().height;
-
-	printf("%f, %f\n", imgW, imgH);
+	imgX = image.size().width;
+	imgY = image.size().height;
 
 	image = imageTransform(image);
 	image = findFlap(image);
 
 	/*geometry_msgs::Pose pose;
-	  pose.position.x = rawX/imgW;
-	  pose.position.y = rawY/imgH;*/
+	pose.position.x = rawX/imgX;
+	pose.position.y = rawY/imgY;*/
 
 	//imshow("flap", image);
 	//waitKey(0);
@@ -134,6 +141,7 @@ void getLiveImage(const sensor_msgs::ImageConstPtr& msg)
 	cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
 	cv_ptr->encoding = "bgr8";
 	cv_ptr->image = image;
+	
 	pub2.publish(cv_ptr->toImageMsg());		
 	ROS_INFO("HEREX");
 	//	while(ros::ok){
@@ -146,9 +154,33 @@ void getLiveImage(const sensor_msgs::ImageConstPtr& msg)
 	//ros::spin();
 }
 
+void getTestImage(){
 
-int main(int argc, char **argv)
-{
+  ros::NodeHandle n;
+  ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
+  
+  cv::Mat img = imread("test_image_2.png");
+
+
+  imgX = img.size().width;
+  imgY = img.size().height;
+
+  img = imageTransform(img);
+  img = findFlap(img);
+
+  /*geometry_msgs::Pose msg;
+  msg.position.x = rawX/imgX;
+  msg.position.y = rawY/imgY;*/
+
+  //pub.publish(msg);
+
+  cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
+  cv_ptr->encoding = "bgr8";
+  cv_ptr->image = img;
+  pub2.publish(cv_ptr->toImageMsg());		
+}
+
+int main(int argc, char **argv){
 
 	//initialize node
 	ros::init(argc, argv, "cv_node");
@@ -166,42 +198,63 @@ int main(int argc, char **argv)
 	//publisher
 	ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
 
-
-
 	image_transport::ImageTransport it(n);
 	pub2 = it.advertise("arm_camera/image", 1);
 
 	if(mode == 0){
-		// subsribe topic
-		while(ros::ok){
+	  // subsribe topic
+	  while(ros::ok){
+	  	loop++;
+	    ros::Subscriber sub = n.subscribe("/cv_camera/image_raw", 1, getLiveImage);
+	    
+	    if(loop == 10){
+	    	printf("Loop = %d\n", loop);
+		  	printf("sumX = %f\n", sumX);
+		  	printf("sumY = %f\n", sumY);
+		  	float deltaX = sumX/imgX/loop;
+		  	printf("deltaX = %f\n", deltaX);
+		  	float deltaY = sumY/imgY/loop;
+		  	printf("deltaY = %f\n", deltaY);
 
-			ros::Subscriber sub = n.subscribe("/cv_camera/image_raw", 1, getLiveImage);
+		  	geometry_msgs::Pose pose;
+		  	pose.position.x = deltaX;
+		  	pose.position.y = deltaY;
+		  	pub.publish(pose);
 
-			ros::spin();
-		}
-	} else{
-		//FOR SAVED IMAGE
+		  	loop = 0;
+	  		sumX = 0;
+	  		sumY = 0;
+	    }
 
-		cv::Mat img = imread("test_image_2.png");
+	    ros::spin();
 
-		float imgW = img.size().width;
-		float imgH = img.size().height;
-		printf("%f, %f\n", imgW, imgH);
+	  }
+	}
+	else{
+	  while(true){
+	  	loop++;
+	    getTestImage();
+	    sleep(1);
 
-		img = imageTransform(img);
-		img = findFlap(img);
+	    if(loop == 10){
+	    	printf("Loop = %d\n", loop);
+	  		printf("sumX = %f\n", sumX);
+	  		printf("sumY = %f\n", sumY);
+	  		float deltaX = sumX/imgX/loop;
+	  		printf("deltaX = %f\n", deltaX);
+	  		float deltaY = sumY/imgY/loop;
+			printf("deltaY = %f\n", deltaY);
 
-		printf("%f, %f\n", rawX/imgW, rawY/imgH);
+	  		geometry_msgs::Pose pose;
+	  		pose.position.x = deltaX;
+	 		pose.position.y = deltaY;
+	  		pub.publish(pose);
 
-		geometry_msgs::Pose msg;
-		msg.position.x = rawX/imgW;
-		msg.position.y = rawY/imgH;
-
-		pub.publish(msg);
-
-		imshow( "image", img);
-		waitKey(0);
-
+	  		loop = 0;
+	  		sumX = 0;
+	  		sumY = 0;
+	    }
+	  }
 	}
 
 	return 0;
