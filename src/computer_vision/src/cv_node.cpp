@@ -7,6 +7,8 @@
 #include <geometry_msgs/Pose.h>
 #include <fstream>
 
+#include "cv_service_msgs/cv_service.h"
+
 using namespace std;
 using namespace cv;
 
@@ -28,178 +30,221 @@ int loop = 0;
 image_transport::Publisher pub2;
 image_transport::Publisher pub3;
 
-cv::Mat getCircles(cv::Mat img){
-	vector<Vec3f> circles;
+class Cv_service{
+public:
+	static cv::Mat getCircles(cv::Mat img){
+		vector<Vec3f> circles;
 
-	// Apply the Hough Transform to find the circles
-	printf("circlet is %d\n", circlet);
-	printf("mode is %d\n", mode);
-	HoughCircles(img, circles, CV_HOUGH_GRADIENT, 1, img.rows/8, 200, circlet, 0, 0);
+		// Apply the Hough Transform to find the circles
+		printf("circlet is %d\n", circlet);
+		printf("mode is %d\n", mode);
+		HoughCircles(img, circles, CV_HOUGH_GRADIENT, 1, img.rows/8, 200, circlet, 0, 0);
 
-	cvtColor(img, img, CV_GRAY2BGR );
+		cvtColor(img, img, CV_GRAY2BGR );
 
-	if(circles.size() >= 1){
-		rawX = cvRound(circles[0][0]);
-		rawY = cvRound(circles[0][1]);
+		if(circles.size() >= 1){
+			rawX = cvRound(circles[0][0]);
+			rawY = cvRound(circles[0][1]);
 
-		sumX += cvRound(circles[0][0]);
-		sumY += cvRound(circles[0][1]);
-	} else{
-		printf("404 FLAP NOT FOUND\n");
+			sumX += cvRound(circles[0][0]);
+			sumY += cvRound(circles[0][1]);
+		} else{
+			printf("404 FLAP NOT FOUND\n");
+			return img;
+		}
+
+		if(loop == 10){
+			cv::Mat meanImg = img;
+			float deltaX = sumX/loop;
+			float deltaY = sumY/loop;
+
+			Point center(deltaX, deltaY);
+			printf("Test: deltax is %f, deltay is %f\n", deltaX, deltaY);
+			circle(meanImg, center, 3, Scalar(255,255,0), -1, 8, 0 );
+
+			cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
+			cv_ptr->encoding = "bgr8";
+			cv_ptr->image = meanImg;
+		
+			pub3.publish(cv_ptr->toImageMsg());
+
+			//imshow("average flap center", meanImg);
+			//waitKey(4010);
+		}
+
+		// Draw the circles detected
+		for( size_t i = 0; i < circles.size(); i++ )
+		{
+			Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+			int radius = cvRound(circles[i][2]);
+
+			printf("%d, %d, %d\n", cvRound(circles[i][0]), cvRound(circles[i][1]), cvRound(circles[i][2]));
+			// circle center
+			circle(img, center, 3, Scalar(0,255,0), -1, 8, 0 );
+			// circle outline
+			circle(img, center, radius, Scalar(0,0,255), 3, 8, 0 );
+		}
+
+		printf("%lu\n", circles.size());
+
+		return img;
+	}
+	
+	static cv::Mat findFlap(cv::Mat img){
+
+		cv::Mat detected_edges;
+
+		//clean up
+		blur(img, detected_edges, Size(filter, filter) );
+
+		//convert to edges
+
+		//imshow( "b/w blur", detected_edges);
+
+		Canny(detected_edges, detected_edges, t_hold, t_hold*3, 5);
+
+		/// Using Canny's output as a mask, we display our result
+		Mat dst;
+		dst = Scalar::all(0);
+
+		img.copyTo( dst, detected_edges);
+		//imshow( window_name, dst );
+
+		dst = getCircles(dst);
+
+		return dst;
+	}
+
+	//Make any neccessary transformations
+	static cv::Mat imageTransform(cv::Mat img){
+
+		//convert to grayscale
+		cvtColor(img, img, CV_BGR2GRAY );
+
+		//add blur
+		//GaussianBlur(img, img, Size(9, 9), 2, 2);
+
 		return img;
 	}
 
-	if(loop == 10){
-		cv::Mat meanImg = img;
-		float deltaX = sumX/loop;
-		float deltaY = sumY/loop;
+	//FOR CAMERA USE
+	static void getLiveImage(const sensor_msgs::ImageConstPtr& msg){
 
-		Point center(deltaX, deltaY);
-		printf("Test: deltax is %f, deltay is %f\n", deltaX, deltaY);
-		circle(meanImg, center, 3, Scalar(255,255,0), -1, 8, 0 );
+		printf("test\n");
+		cv::Mat image = cv_bridge::toCvShare(msg, "bgr8")->image;
 
+
+		printf("test2\n");
+		// node handler
+		ros::NodeHandle n;
+		//ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
+
+		if(!image.data){
+			printf("oh no\n");
+			return;
+		}
+
+		imgX = image.size().width;
+		imgY = image.size().height;
+
+		image = imageTransform(image);
+		image = findFlap(image);
+
+
+		//publish image to ros topic 
+		//sensor_msgs::Image imgmsg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg;
 		cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
 		cv_ptr->encoding = "bgr8";
-		cv_ptr->image = meanImg;
-	
-		pub3.publish(cv_ptr->toImageMsg());
+		cv_ptr->image = image;
+		
+		pub2.publish(cv_ptr->toImageMsg());		
+		//	while(ros::ok){
+		//pub2.publish(imgmsg);
+		//		}
 
-		//imshow("average flap center", meanImg);
-		//waitKey(4010);
+
+		//pub.publish(pose);
+
+		//ros::spin();
 	}
 
-	// Draw the circles detected
-	for( size_t i = 0; i < circles.size(); i++ )
-	{
-		Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
-		int radius = cvRound(circles[i][2]);
+	static void getTestImage(){
+	  ros::NodeHandle n;
+	  //ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
+	  
+	  cv::Mat img = imread("test_image_2.png");
 
-		printf("%d, %d, %d\n", cvRound(circles[i][0]), cvRound(circles[i][1]), cvRound(circles[i][2]));
-		// circle center
-		circle(img, center, 3, Scalar(0,255,0), -1, 8, 0 );
-		// circle outline
-		circle(img, center, radius, Scalar(0,0,255), 3, 8, 0 );
+
+	  imgX = img.size().width;
+	  imgY = img.size().height;
+
+	  img = imageTransform(img);
+	  img = findFlap(img);
+
+	  /*geometry_msgs::Pose msg;
+	  msg.position.x = rawX/imgX;
+	  msg.position.y = rawY/imgY;*/
+
+	  //pub.publish(msg);
+
+	  cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
+	  cv_ptr->encoding = "bgr8";
+	  cv_ptr->image = img;
+	  pub2.publish(cv_ptr->toImageMsg());		
 	}
 
-	printf("%lu\n", circles.size());
+	bool cvCB(cv_service_msgs::cv_service::Request  &req, 
+		cv_service_msgs::cv_service::Response &res){//publically accessible class to handle service callback
 
-	return img;
-}
+		ros::NodeHandle n;
+		
+		//Live Image
+		if(mode == 0){
+			while(loop <= 10){
+				loop++;
+		   		ros::Subscriber sub = n.subscribe("/cv_camera/image_raw", 1, getLiveImage);
+			}
 
-cv::Mat findFlap(cv::Mat img){
+			printf("Loop = %d\n", loop);
+			printf("sumX = %f\n", sumX);
+			printf("sumY = %f\n", sumY);
+			float deltaX = sumX/imgX/loop;
+			printf("deltaX = %f\n", deltaX);
+			float deltaY = sumY/imgY/loop;
+			printf("deltaY = %f\n", deltaY);
+		} 
+		else{
+			while(loop <= 10){
+		  		loop++;
+		    	getTestImage();
+		    	sleep(1);
+		    }
 
-	cv::Mat detected_edges;
+		    printf("Loop = %d\n", loop);
+		  	printf("sumX = %f\n", sumX);
+		  	printf("sumY = %f\n", sumY);
+		  	float deltaX = sumX/imgX/loop;
+		  	printf("deltaX = %f\n", deltaX);
+		  	float deltaY = sumY/imgY/loop;
+			printf("deltaY = %f\n", deltaY);
+		}
 
-	//clean up
-	blur(img, detected_edges, Size(filter, filter) );
+		res.flapX = sumX/imgX/loop;
+		res.flapY = sumY/imgY/loop;
+		res.status = 1;
 
-	//convert to edges
+	    return true;
+    }
 
-	//imshow( "b/w blur", detected_edges);
+};
 
-	Canny(detected_edges, detected_edges, t_hold, t_hold*3, 5);
-
-	/// Using Canny's output as a mask, we display our result
-	Mat dst;
-	dst = Scalar::all(0);
-
-	img.copyTo( dst, detected_edges);
-	//imshow( window_name, dst );
-
-	dst = getCircles(dst);
-
-	return dst;
-}
-
-
-//Make any neccessary transformations
-cv::Mat imageTransform(cv::Mat img){
-
-	//convert to grayscale
-	cvtColor(img, img, CV_BGR2GRAY );
-
-	//add blur
-	//GaussianBlur(img, img, Size(9, 9), 2, 2);
-
-	return img;
-}
-
-//FOR CAMERA USE
-void getLiveImage(const sensor_msgs::ImageConstPtr& msg)
-{
-
-	printf("test\n");
-	cv::Mat image = cv_bridge::toCvShare(msg, "bgr8")->image;
-
-
-	printf("test2\n");
-	// node handler
-	ros::NodeHandle n;
-	ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
-
-	if(!image.data){
-		printf("oh no\n");
-		return;
-	}
-
-	imgX = image.size().width;
-	imgY = image.size().height;
-
-	image = imageTransform(image);
-	image = findFlap(image);
-
-
-	//publish image to ros topic 
-	//sensor_msgs::Image imgmsg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg;
-	cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
-	cv_ptr->encoding = "bgr8";
-	cv_ptr->image = image;
-	
-	pub2.publish(cv_ptr->toImageMsg());		
-	//	while(ros::ok){
-	//pub2.publish(imgmsg);
-	//		}
-
-
-	//pub.publish(pose);
-
-	//ros::spin();
-}
-
-void getTestImage(){
-
-  ros::NodeHandle n;
-  ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
-  
-  cv::Mat img = imread("test_image_2.png");
-
-
-  imgX = img.size().width;
-  imgY = img.size().height;
-
-  img = imageTransform(img);
-  img = findFlap(img);
-
-  /*geometry_msgs::Pose msg;
-  msg.position.x = rawX/imgX;
-  msg.position.y = rawY/imgY;*/
-
-  //pub.publish(msg);
-
-  cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
-  cv_ptr->encoding = "bgr8";
-  cv_ptr->image = img;
-  pub2.publish(cv_ptr->toImageMsg());		
-}
 
 int main(int argc, char **argv){
-
 	//initialize node
 	ros::init(argc, argv, "cv_node");
 
 	// node handler
 	ros::NodeHandle n;
-
 
 	//load setting from .yaml
 	n.getParam("settings/mode", mode);
@@ -207,69 +252,16 @@ int main(int argc, char **argv){
 	n.getParam("settings/t_hold", t_hold);
 	n.getParam("settings/circlet", circlet);
 
-	//publisher
-	ros::Publisher pub = n.advertise<geometry_msgs::Pose>("rawCV", 1);
+	Cv_service CV;
 
 	image_transport::ImageTransport it(n);
 	image_transport::ImageTransport it2(n);
 	pub2 = it.advertise("arm_camera/image", 1);
 	pub3 = it2.advertise("arm_camera/average", 1);
-	
-	if(mode == 0){
-	  // subsribe topic
-	  while(ros::ok){
-	  	loop++;
-	    ros::Subscriber sub = n.subscribe("/cv_camera/image_raw", 1, getLiveImage);
-	    
-	    if(loop == 10){
-	    	printf("Loop = %d\n", loop);
-		  	printf("sumX = %f\n", sumX);
-		  	printf("sumY = %f\n", sumY);
-		  	float deltaX = sumX/imgX/loop;
-		  	printf("deltaX = %f\n", deltaX);
-		  	float deltaY = sumY/imgY/loop;
-		  	printf("deltaY = %f\n", deltaY);
 
-		  	geometry_msgs::Pose pose;
-		  	pose.position.x = deltaX;
-		  	pose.position.y = deltaY;
-		  	pub.publish(pose);
+	ros::ServiceServer service = n.advertiseService("cv_service", &Cv_service::cvCB, &CV);//tie service to callback function inside a class
 
-		  	loop = 0;
-	  		sumX = 0;
-	  		sumY = 0;
-	    }
-
-	    ros::spin();
-
-	  }
-	}
-	else{
-	  while(ros::ok){
-	  	loop++;
-	    getTestImage();
-	    sleep(1);
-
-	    if(loop == 10){
-	    	printf("Loop = %d\n", loop);
-	  		printf("sumX = %f\n", sumX);
-	  		printf("sumY = %f\n", sumY);
-	  		float deltaX = sumX/imgX/loop;
-	  		printf("deltaX = %f\n", deltaX);
-	  		float deltaY = sumY/imgY/loop;
-			printf("deltaY = %f\n", deltaY);
-
-	  		geometry_msgs::Pose pose;
-	  		pose.position.x = deltaX;
-	 		pose.position.y = deltaY;
-	  		pub.publish(pose);
-
-	  		loop = 0;
-	  		sumX = 0;
-	  		sumY = 0;
-	    }
-	  }
-	}
+ 	ros::spin();
 
 	return 0;
 }

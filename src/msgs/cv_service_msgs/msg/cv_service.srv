@@ -1,0 +1,5 @@
+int8 mode
+---
+float32 flapX
+float32 flapY
+int8 status
