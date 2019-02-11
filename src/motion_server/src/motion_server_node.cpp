@@ -147,9 +147,6 @@ double status;
 poses.push_back(poseEOAT);
 
 
-
-
-
 	status=	move_group.computeCartesianPath(poses, 0.005, 0.0, trajectory, true);
 
 
@@ -162,8 +159,6 @@ poses.push_back(poseEOAT);
       }
 else if (mode==3){//queue a point draw DANGER ZONE 3 point touch
 
-
-
 }
 
       feedback_.current=status;
@@ -173,9 +168,6 @@ else if (mode==3){//queue a point draw DANGER ZONE 3 point touch
 
       }
 
-
-
-
       /*
 	 if (status>0.0){
 	 success=true;
@@ -184,7 +176,6 @@ else if (mode==3){//queue a point draw DANGER ZONE 3 point touch
 	 success=false;
 	 }
        */
-
 
 
       //____EX looped exicution with preemption

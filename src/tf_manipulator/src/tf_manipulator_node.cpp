@@ -11,6 +11,8 @@
 #include <geometry_msgs/Vector3.h>
 #include "std_msgs/String.h"
 #include "mode_msgs/Mode.h"
+#include <std_msgs/Float32.h>
+
 int debugLevel=2;//2 prints all things, 3 ignores mode topic
 
 int myMode=0;
@@ -25,7 +27,7 @@ class TFman{//the tf manipulator class #class is the tool of the enemy
   private:
     geometry_msgs::Pose savedPose;//TODO boost share or make a class
 
-
+float myAngle=0;
 
     void setPose(tf::StampedTransform trans){
 
@@ -80,7 +82,7 @@ if(myMode==2){
       double fixRoll =degTorad(0);//135
       double fixPitch =degTorad(0);//x rot
       double fixYaw = degTorad(0);//y rot
-      double hingeAngle = degTorad(90);//z rot
+      double hingeAngle = degTorad(myAngle);//z rot
       static tf::TransformBroadcaster br2;
       tf::Transform transf;
       transf.setOrigin(tf::Vector3(x,y,z));
@@ -116,20 +118,20 @@ if(myMode==2){
       transf.setRotation(q_rot);
       br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_touching","flap_clearance"));
 
-      /*
-      //touching
-      transf.setOrigin(tf::Vector3(-hingeX,0,-hingeZ+touchCorrection));
+      
+      //touching hole
+      transf.setOrigin(tf::Vector3(0,0,.05));
       q_rot = tf::createQuaternionFromRPY(0,0,0);
       transf.setRotation(q_rot);
-      br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_hinge","flap_touchingB"));
+      br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_saved","hole_touching"));
 
-      //clearance
+      //clearance hole
       transf.setOrigin(tf::Vector3(0,0,-clearDist));
       q_rot = tf::createQuaternionFromRPY(0,0,0);
       transf.setRotation(q_rot);
-      br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_touchingA","flap_clearanceB"));
+      br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_saved","hole_clearance"));
 
-       */
+      
 
     }
 
@@ -183,8 +185,11 @@ if(myMode==2){
 	}
     }
 }
+void hingeCB(const std_msgs::Float32 msg){
 
+myAngle=msg.data;
 
+}
 
 
 
@@ -208,7 +213,9 @@ int main(int argc, char** argv){
   ros::ServiceServer service = nh.advertiseService("transform",&TFman::executeCB,&tfman);
 
     ros::Timer timer = nh.createTimer(ros::Duration(0.1), &TFman::timerCallback,&tfman);
-  
+
+
+ros::Subscriber angleSub = nh.subscribe("hinge_angle",500,&TFman::hingeCB,&tfman);  
  // ros::spin();
   ros::AsyncSpinner spinner(2);
   spinner.start();
