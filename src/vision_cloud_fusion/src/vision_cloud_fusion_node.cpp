@@ -145,11 +145,12 @@ if(myMode==1){
 
 	//---Crop a cylinder out of the point cloud
 	float x = 0;//-.25,.5
-	float y = -.06;//was -.06
+	float y = .11;//was -.06
 	float z = 0; 
 	float rad = .175;//radius//.1
 	float dep =2;//depth
 	x=-x;
+	y=-y;
 	//build cylinder TODO move to helper function
 	hullCloud->push_back(pcl::PointXYZ(x,y,z));//center
 	hullCloud->push_back(pcl::PointXYZ(x+rad,y,z));//right

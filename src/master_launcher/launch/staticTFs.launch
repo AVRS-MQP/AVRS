@@ -3,7 +3,7 @@
 
 
 <!--Location of Kinect-->
- <node pkg="tf" type="static_transform_publisher" name="kinect" args="-.50 .25 .580 -1.5708 0 0 base_link camera_link 1000"/>
+ <node pkg="tf" type="static_transform_publisher" name="kinect" args="-.50 .43 .580 -1.5708 0 0 base_link camera_link 1000"/>
 
 <!--pose fix for kinect-->
  <node pkg="tf" type="static_transform_publisher" name="kinect2" args="0 0 0 1.5708 0 1.5708  camera_link camera_link2 1000"/>
@@ -35,7 +35,7 @@
 
 
 <!--Static Frames for arm motion-->
- <node pkg="tf" type="static_transform_publisher" name="arm_cam_pose" args="-0.5 -0.9 .75 0 0 1.5708 base_link arm_cam_pose 1000"/>
+ <node pkg="tf" type="static_transform_publisher" name="arm_cam_pose" args="0 -1 .75 0 0 1.5708 base_link arm_cam_pose 1000"/>
 
 <node pkg="tf" type="static_transform_publisher" name="intmd_pose_left" args="0.5 -0.75 1 0 0 1.5708 base_link intmd_pose_left 1000"/>
 

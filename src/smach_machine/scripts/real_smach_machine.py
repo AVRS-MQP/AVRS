@@ -296,8 +296,8 @@ class OpenFlap(smach.State):
 
         #open the flap
         for i in range(0,80,3):
-            hingePub.publish(i)
             rospy.sleep(1)
+            hingePub.publish(i)
             (trans, rot) = get_pose_from_tf("base_link", "flap_touching")
             goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
             client.send_goal(goal)  # Sends the goal to the action server.
