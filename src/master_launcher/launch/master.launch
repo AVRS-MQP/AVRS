@@ -37,8 +37,8 @@
 
  <!--launch cv drivers-->
     <param name="cv_camera/deviceid" value="1"/>
-    <include file="$(find cv)/launch/computer_vision.launch" output="log">
-  </include>
+    <!--include file="$(find cv)/launch/computer_vision.launch" output="log">
+  </include-->
 
 
 
