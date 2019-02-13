@@ -157,11 +157,42 @@ poses.push_back(poseEOAT);
 	success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 
       }
-else if (mode==3){//queue a point draw DANGER ZONE 3 point touch
+else if (mode==3){//control in tooling frame
+
+      move_group.setPoseReferenceFrame("/fsp");
+	
+	std::vector< geometry_msgs::Pose > poses;
+
+
+	//moveit_msgs::GetCartesianPath srv;
+	//srv.request.wait_for_execution = true;
+
+	//ros::ServiceClient executeKnownTrajectoryServiceClient = nh_.serviceClient<moveit_msgs::GetCartesianPathExecuteKnownTrajectory>("/execute_kinematic_path");
+
+
+poses.push_back(poseEOAT);
+
+
+	status=	move_group.computeCartesianPath(poses, 0.005, 0.0, trajectory, true);
+
+
+	my_plan.trajectory_=trajectory;
+
+	move_group.execute(my_plan);
+	//	move_group.move();
+	success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+
+
+
 
 }
 
-      feedback_.current=status;
+      
+
+
+
+
+	feedback_.current=status;
 
       if(visualize=1){
 	//display_publisher.publish(trajectory);

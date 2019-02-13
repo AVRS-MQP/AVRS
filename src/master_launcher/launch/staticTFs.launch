@@ -37,7 +37,7 @@
 <!--Static Frames for arm motion-->
  <node pkg="tf" type="static_transform_publisher" name="arm_cam_pose" args="0 -1 .75 0 0 1.5708 base_link arm_cam_pose 1000"/>
 
-<node pkg="tf" type="static_transform_publisher" name="intmd_pose_left" args="0.5 -0.75 1 0 0 1.5708 base_link intmd_pose_left 1000"/>
+<node pkg="tf" type="static_transform_publisher" name="intmd_pose_left" args="0.5 -1 .75 0 0 1.5708 base_link intmd_pose_left 1000"/>
 
 <node pkg="tf" type="static_transform_publisher" name="intmd_pose_right" args="0 -0.75 1.25 0 0 1.5708 base_link intmd_pose_right 1000"/>
 
