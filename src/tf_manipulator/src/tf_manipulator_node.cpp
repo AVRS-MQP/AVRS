@@ -131,7 +131,12 @@ if(myMode==2){
       transf.setRotation(q_rot);
       br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_saved","hole_clearance"));
 
-      
+     //exit flap clearance 
+      transf.setOrigin(tf::Vector3(-.1,0,-.1));
+      q_rot = tf::createQuaternionFromRPY(0,degTorad(45),0);
+      transf.setRotation(q_rot);
+      br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_clearance","flap_clearance2"));
+
 
     }
 
@@ -140,7 +145,7 @@ if(myMode==2){
     bool executeCB(mode_msgs::Mode::Request &req, mode_msgs::Mode::Response &res){
       //	bool result= computePose();
       myMode=req.input2;
-  ROS_WARN("MODE: %i",myMode);
+  ROS_WARN("TF-MODE: %i",myMode);
       if(myMode==1){
 
 	savedFlag=false;

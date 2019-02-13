@@ -108,7 +108,7 @@ class Fusion{
 		void computePose(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){//OLD
 
      
-      ROS_WARN("MODE %d",myMode);
+      ROS_WARN("FUSION-MODE %d",myMode);
 if(myMode==1){
 
 

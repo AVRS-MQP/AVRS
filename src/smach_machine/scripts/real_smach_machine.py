@@ -39,11 +39,6 @@ from tf import TransformListener  # Autofills to this, and uses it in line 43 so
 from std_msgs.msg import Float32
 
 
-
-
-
-
-
 def get_pose_from_tf(base_frame, pose_frame):
     listener = tf.TransformListener()
     # print("A")
@@ -59,6 +54,94 @@ def get_pose_from_tf(base_frame, pose_frame):
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             # print("ERROR")
             continue
+
+
+def remove_tool(current_tool):
+    tool = "tes"  # the control tool
+
+    if (current_tool == "vac"):
+        touching = "h_tool_vac"
+        clearing = "h_tool_vac_clear"
+    elif (current_tool == "tes"):
+        touching = "h_tool_vac"
+        clearing = "h_tool_vac_clear"
+    elif (current_tool == "j17"):
+        touching = "h_tool_j17"
+        clearing = "h_tool_j17_clear"
+    else:
+        print("ERROR: Invalid current tool")
+
+    client = actionlib.SimpleActionClient('motion', motion_msgs.msg.MoveRobotQuatAction)
+
+    # go to clearance
+    print("Going to clearance for tool: ", current_tool)
+    (trans, rot) = get_pose_from_tf("base_link", clearing)
+    goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 1)
+    client.send_goal(goal)  # Sends the goal to the action server.
+    print("Waiting for server")
+    client.wait_for_server()
+
+    # go to holster
+    print("Going to dropoff for tool: ", current_tool)
+    (trans, rot) = get_pose_from_tf("base_link", touching)
+    goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+    client.send_goal(goal)  # Sends the goal to the action server.
+    print("Waiting for server")
+    client.wait_for_server()
+
+    print("REMOVE THE TOOL")
+    rospy.sleep(6)
+    # go to clearance
+    print("Going to clearance for tool: ", current_tool)
+    (trans, rot) = get_pose_from_tf("base_link", clearing)
+    goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+    client.send_goal(goal)  # Sends the goal to the action server.
+    print("Waiting for server")
+    client.wait_for_server()
+
+
+def get_tool(new_tool):
+    tool = "fsp"  # the control tool
+
+    if (new_tool == "vac"):
+        touching = "h_tool_vac"
+        clearing = "h_tool_vac_clear"
+    elif (new_tool == "tes"):
+        touching = "h_tool_vac"
+        clearing = "h_tool_vac_clear"
+    elif (new_tool == "j17"):
+        touching = "h_tool_j17"
+        clearing = "h_tool_j17_clear"
+    else:
+        print("ERROR: Invalid current tool")
+
+    client = actionlib.SimpleActionClient('motion', motion_msgs.msg.MoveRobotQuatAction)
+
+    # go to clearance
+    print("Going to clearance for tool: ", new_tool)
+    (trans, rot) = get_pose_from_tf("base_link", clearing)
+    goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 1)
+    client.send_goal(goal)  # Sends the goal to the action server.
+    print("Waiting for server")
+    client.wait_for_server()
+
+    # go to holster
+    print("Going to dropoff for tool: ", new_tool)
+    (trans, rot) = get_pose_from_tf("base_link", touching)
+    goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+    client.send_goal(goal)  # Sends the goal to the action server.
+    print("Waiting for server")
+    client.wait_for_server()
+
+    print("GET THE TOOL")
+    rospy.sleep(6)
+    # go to clearance
+    print("Going to clearance for tool: ", new_tool)
+    (trans, rot) = get_pose_from_tf("base_link", clearing)
+    goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+    client.send_goal(goal)  # Sends the goal to the action server.
+    print("Waiting for server")
+    client.wait_for_server()
 
 
 # note: Reference States
@@ -275,7 +358,7 @@ class OpenFlap(smach.State):
         hingePub.publish(0)
         rospy.sleep(2)
 
-        #go to clearance
+        # go to clearance
         tool = "vac"
         (trans, rot) = get_pose_from_tf("base_link", "flap_clearance")
         goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 1)
@@ -294,18 +377,19 @@ class OpenFlap(smach.State):
         print("SUCK")
         rospy.sleep(10)
 
-        #open the flap
-        for i in range(0,80,3):
+        # open the flap
+        for i in range(0, 80, 3):
             rospy.sleep(1)
             hingePub.publish(i)
             (trans, rot) = get_pose_from_tf("base_link", "flap_touching")
-            goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+            goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool,
+                                                     2)
             client.send_goal(goal)  # Sends the goal to the action server.
             print("Waiting for server")
             client.wait_for_server()
 
-        #once open go back to clearance
-        (trans, rot) = get_pose_from_tf("base_link", "flap_clearance")
+        # once open go back to clearance
+        (trans, rot) = get_pose_from_tf("base_link", "flap_clearance2")
         goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
         client.send_goal(goal)
         client.wait_for_server()
@@ -326,41 +410,13 @@ class ChangeToolCharger(smach.State):
         rospy.loginfo('Executing state ChangeToolCharger')
         rospy.loginfo(userdata.tool_in)
 
-        client = actionlib.SimpleActionClient('motion', motion_msgs.msg.MoveRobotQuatAction)
 
-        print("Waiting for server")
-        client.wait_for_server()
+        charger_type="j17"#needs to be set to "tes" or "j17" todo
 
-        tool = "vac"
+        remove_tool("vac")
+        get_tool(charger_type)
 
-        # Move to a valid pose so the arm doesn't try and break itself to get to arm_cam_pose
-        (trans, rot) = get_pose_from_tf("base_link", "arm_cam_pose")
-        goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
 
-        # Sends the goal to the action server.
-        client.send_goal(goal)
-        rospy.sleep(10)
-
-        (trans, rot) = get_pose_from_tf("base_link", "h_tool_j17_clear")
-        goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
-
-        # Sends the goal to the action server.
-        client.send_goal(goal)
-        rospy.sleep(5)
-
-        (trans, rot) = get_pose_from_tf("base_link", "h_tool_j17")
-        goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
-
-        # Sends the goal to the action server.
-        client.send_goal(goal)
-        rospy.sleep(5)
-
-        (trans, rot) = get_pose_from_tf("base_link", "h_tool_j17_clear")
-        goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
-
-        # Sends the goal to the action server.
-        client.send_goal(goal)
-        rospy.sleep(5)
 
         userdata.tool_out = 2
 
@@ -480,7 +536,7 @@ def main():
                                remapping={'tool_in': 'current_tool'})
 
         smach.StateMachine.add('FIND2DFLAP', Find2DFlap(),
-                               transitions={'correct_pos': 'FIND3DFLAP',
+                               transitions={'correct_pos': 'CHANGETOOLCHARGER',## should be FIND3DFLAP
                                             'wrong_pos': 'FIND2DFLAP'},
                                remapping={'camera_x': 'camera_pos_x',
                                           'camera_y': 'camera_pos_y'})
@@ -504,43 +560,43 @@ def main():
                                remapping={'move_pose': 'robot_pose'})
 
         # note: Reference States
-        smach.StateMachine.add('MOVEARM', MoveArm(),
-                               transitions={'outcome1': 'EXITSMACH'},
-                               remapping={'move_pose': 'robot_pose'})
+        # smach.StateMachine.add('MOVEARM', MoveArm(),
+        #                        transitions={'outcome1': 'EXITSMACH'},
+        #                        remapping={'move_pose': 'robot_pose'})
 
         # note: Unused States
-        smach.StateMachine.add('FINDCAR', FindCar(),
-                               transitions={'outcome1': 'OPENFLAP'},  # Change 'CON' to 'OPENFLAP' to skip concurrence
-                               remapping={'tool_in': 'current_tool'})
-
-        sm_con = smach.Concurrence(outcomes=['outcome4', 'outcome5'],
-                                   default_outcome='outcome4',
-                                   input_keys=['con_in'],
-                                   output_keys=['con_out'],
-                                   outcome_map={'outcome5':
-                                                    {'GETCARINFO': 'outcome2',
-                                                     'LOCATEFLAP': 'outcome1'}})
-
-        with sm_con:
-            # add states to the container
-            smach.Concurrence.add('GETCARINFO', GetCarInfo())
-            smach.Concurrence.add('LOCATEFLAP', LocateFlap())
-
-        smach.StateMachine.add('CON', sm_con,
-                               transitions={'outcome4': 'CON',
-                                            'outcome5': 'OPENFLAP'})
+        # smach.StateMachine.add('FINDCAR', FindCar(),
+        #                        transitions={'outcome1': 'OPENFLAP'},  # Change 'CON' to 'OPENFLAP' to skip concurrence
+        #                        remapping={'tool_in': 'current_tool'})
+        #
+        # sm_con = smach.Concurrence(outcomes=['outcome4', 'outcome5'],
+        #                            default_outcome='outcome4',
+        #                            input_keys=['con_in'],
+        #                            output_keys=['con_out'],
+        #                            outcome_map={'outcome5':
+        #                                             {'GETCARINFO': 'outcome2',
+        #                                              'LOCATEFLAP': 'outcome1'}})
+        #
+        # with sm_con:
+        #     # add states to the container
+        #     smach.Concurrence.add('GETCARINFO', GetCarInfo())
+        #     smach.Concurrence.add('LOCATEFLAP', LocateFlap())
+        #
+        # smach.StateMachine.add('CON', sm_con,
+        #                        transitions={'outcome4': 'CON',
+        #                                     'outcome5': 'OPENFLAP'})
 
     # Create and start the introspection server
-    # sis = smach_ros.IntrospectionServer('my_smach_introspection_server', sm, '/SM_ROOT')
-    # sis.start()
+    sis = smach_ros.IntrospectionServer('my_smach_introspection_server', sm, '/SM_ROOT')
+    sis.start()
 
     # Execute SMACH plan
     outcome = sm.execute()
 
     # Wait for ctrl-c to stop the application
-    # while not rospy.is_shutdown():
-    #     rospy.spin()
-    # sis.stop()
+    while not rospy.is_shutdown():
+        rospy.spin()
+    sis.stop()
 
 
 if __name__ == '__main__':

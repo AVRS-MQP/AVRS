@@ -321,9 +321,14 @@ def main():
                                transitions={'start': 'start'},
                                remapping={'current_tool': 'tooling'})
 
+    sis = smach_ros.IntrospectionServer('my_smach_introspection_server', sm, '/SM_ROOT')
+    sis.start()
+
     # Execute SMACH plan
     outcome = sm.execute()
 
+    rospy.spin()
+    sis.stop()
 
 if __name__ == '__main__':
     main()

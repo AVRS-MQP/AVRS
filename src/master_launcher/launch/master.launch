@@ -31,7 +31,7 @@
 
 
  <!--Launches filtering of point cloud-->
-  <include file="$(find point_cloud_processing)/launch/point_cloud_processing.launch" output="log">
+  <include file="$(find point_cloud_processing)/launch/point_cloud_processing.launch">
   </include>
 
 
@@ -40,6 +40,7 @@
     <!--include file="$(find cv)/launch/computer_vision.launch" output="log">
   </include-->
 
+ <!--Include secondary launch here-->
 
 
 </launch>

@@ -1,0 +1,21 @@
+<!--One launch file to rule them all-->
+<!--see readme section on launch files for details on how to use file-->
+<!--maintainer email="nxgamarra@gmail.com">Nikolas Gamarra</maintainer-->
+
+<launch>
+ 
+
+ <!--Launches motion server-->
+  <include file="$(find motion_server)/launch/motion_server.launch">
+  </include>
+
+ <!--Launches fusion node-->
+  <include file="$(find vision_cloud_fusion)/launch/vision_cloud_fusion.launch">
+  </include>
+
+ <!--Launches TF node-->
+  <include file="$(find tf_manipulator)/launch/tf_manipulator.launch">
+  </include>
+
+
+</launch>
