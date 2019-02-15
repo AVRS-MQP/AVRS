@@ -33,6 +33,7 @@ from geometry_msgs.msg import (
 )
 import mode_msgs
 from mode_msgs.srv import Mode  #
+from cv_service_msgs.srv import cv_service
 
 from geometry_msgs.msg import PoseStamped
 
@@ -259,8 +260,17 @@ class Find2DFlap(smach.State):
 
     def execute(self, userdata):
         # if userdata.camera_x == .5 and userdata.camera_y == .5:  # camera in correct position
-
         print("Waiting for CV srv")
+        rospy.wait_for_service('cv_service')
+
+
+        while not rospy.is_shutdown():
+            mode=1
+            cv = rospy.ServiceProxy('cv_service',cv_service)
+            responce=cv(mode)
+
+            print("result",responce)
+            rospy.sleep(2)
 
         # rospy.wait_for_service('cv_pose')  #TODO match with Matt's CV service update service to tage in args for flap, j17, tes
         # cv_flap = rospy.ServiceProxy('cv_pose', Mode)

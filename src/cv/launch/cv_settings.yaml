@@ -1,8 +1,13 @@
 debug_level : 0
 mode: 0
 filter: 7
-t_hold: 100
-circlet: 100
+t_hold: 110
+circlet: 110
+
+
+#filter: 5
+#t_hold: 100
+#circlet: 200
 
 
 
