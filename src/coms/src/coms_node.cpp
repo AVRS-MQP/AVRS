@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <stdio.h>
 
+
 ros::Publisher msg_pub;
 int count = 0;
 
@@ -101,6 +102,7 @@ void vehicle_callback(const ros::TimerEvent&)
     msg_pub.publish(msg);
   }
 }
+
 
 int main(int argc, char **argv) {
 

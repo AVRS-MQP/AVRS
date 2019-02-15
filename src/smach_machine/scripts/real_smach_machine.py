@@ -9,8 +9,9 @@ import actionlib
 import actionlib_tutorials_msgs
 
 import motion_msgs
+import coms_msgs
 from motion_msgs.msg import *
-
+from coms_msgs.msg import *
 from force_msgs.msg import LoadCellForces32
 
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
@@ -59,13 +60,13 @@ def get_pose_from_tf(base_frame, pose_frame):
 def remove_tool(current_tool):
     tool = "fsp"  # the control tool
 
-    if (current_tool == "vac"):
+    if current_tool == "vac":
         touching = "h_tool_vac"
         clearing = "h_tool_vac_clear"
-    elif (current_tool == "tes"):
+    elif current_tool == "tes":
         touching = "h_tool_vac"
         clearing = "h_tool_vac_clear"
-    elif (current_tool == "j17"):
+    elif current_tool == "j17":
         touching = "h_tool_j17"
         clearing = "h_tool_j17_clear"
     else:
@@ -103,13 +104,13 @@ def remove_tool(current_tool):
 def get_tool(new_tool):
     tool = "fsp"  # the control tool
 
-    if (new_tool == "vac"):
+    if new_tool == "vac":
         touching = "h_tool_vac"
         clearing = "h_tool_vac_clear"
-    elif (new_tool == "tes"):
+    elif new_tool == "tes":
         touching = "h_tool_vac"
         clearing = "h_tool_vac_clear"
-    elif (new_tool == "j17"):
+    elif new_tool == "j17":
         touching = "h_tool_j17"
         clearing = "h_tool_j17_clear"
     else:
@@ -463,7 +464,7 @@ class PlugIn(smach.State):
         client.wait_for_server()
         rospy.sleep(10)
 
-        #trying to do a tool frame motion
+        # trying to do a tool frame motion
         goal = motion_msgs.msg.MoveRobotQuatGoal(0,0,.5, 0, 0, 0, 1, tool, 3)
         client.send_goal(goal)
         client.wait_for_server()
@@ -476,12 +477,11 @@ class PlugIn(smach.State):
         client.wait_for_server()
         rospy.sleep(10)
 
-        #trying to do a tool frame motion
-        goal = motion_msgs.msg.MoveRobotQuatGoal(0,.2,0, 0, 0, 0, 1, tool, 3)
+        # trying to do a tool frame motion
+        goal = motion_msgs.msg.MoveRobotQuatGoal(0, .2, 0, 0, 0, 0, 1, tool, 3)
         client.send_goal(goal)
         client.wait_for_server()
         rospy.sleep(10)
-
 
         #todo end test code
 
@@ -505,12 +505,21 @@ class FindCar(smach.State):
 # define state GetCarInfo
 # CON state, currently unused
 class GetCarInfo(smach.State):
+    def coms_callback(self, data):
+        self.car_model = data.model
+        self.charger = data.charger_type
+        self.battery_pcnt = data.battery_charge
+        self.charge_lvl = data.charge_level
+
+        print("in Coms CB")
+
     def __init__(self):
         smach.State.__init__(self, outcomes=['outcome1', 'outcome2'],
                              input_keys=['con_in'],
                              output_keys=['con_out'])
         # temp variable, recursion forever using just userdata
         self.counter = 0
+        self.yun_coms = rospy.Subscriber('comsUplink', Vehicle, self.coms_callback)
 
     def execute(self, userdata):
         rospy.loginfo('Executing state GetCarInfo')
