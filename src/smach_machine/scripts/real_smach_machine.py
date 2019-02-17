@@ -465,7 +465,7 @@ class PlugIn(smach.State):
         client = actionlib.SimpleActionClient('motion', motion_msgs.msg.MoveRobotQuatAction)
 
                  #todo remove test only
-        tool = "cam"
+        tool = "vac"
 
         print("moving camera to see charger")
         (trans, rot) = get_pose_from_tf("base_link", "arm_cam_pose")# todo should be flap_hole_clearance, setting to other for testing
@@ -582,7 +582,7 @@ def main():
     with sm:
         # Add states to the container
         smach.StateMachine.add('SETCALIB', SetCalib(),
-                               transitions={'sm_ready': 'FIND2DFLAP'},
+                               transitions={'sm_ready': 'CHANGETOOLCHARGER'}, ## should be FIND2DFLAP
                                remapping={'tool_in': 'current_tool'})
 
         smach.StateMachine.add('FIND2DFLAP', Find2DFlap(),

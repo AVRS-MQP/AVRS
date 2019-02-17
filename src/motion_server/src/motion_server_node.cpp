@@ -33,6 +33,14 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
 
+#include <tf/tf.h>
+#include <tf/transform_datatypes.h>
+#include <tf/transform_listener.h>
+#include <geometry_msgs/Pose.h>
+#include <tf/transform_broadcaster.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Vector3.h>
+
 class MoveRobotQuatAction
 {
   protected:
@@ -72,55 +80,57 @@ class MoveRobotQuatAction
        */
 
       ROS_INFO("%s: ExcutingCB: X:%f Y:%f Z:%f ",action_name_.c_str(),goal->x,goal->y,goal->z);
-	std::string group="manipulator";
-	//create quaternion
-	tf::Quaternion q_rot;
-	tf::TransformListener listener;
+      std::string group="manipulator";
+      //create quaternion
+      tf::Quaternion q_rot;
+      tf::TransformListener listener;
 
-	float roll, pitch, yaw, x, y, z, w;
-	//pull all the values from goal
-	roll=goal->roll;
-	pitch=goal->pitch;
-	yaw=goal->yaw;
-	w = goal->w;
-	x=goal->x;
-	y=goal->y;
-	z=goal->z;
-	group=goal->frame;
-	ROS_INFO("t %f u %f v %f w %f", roll, pitch, yaw, w);
+      float roll, pitch, yaw, x, y, z, w;
+      //pull all the values from goal
+      roll=goal->roll;
+      pitch=goal->pitch;
+      yaw=goal->yaw;
+      w = goal->w;
+      x=goal->x;
+      y=goal->y;
+      z=goal->z;
+      group=goal->frame;
+      ROS_INFO("t %f u %f v %f w %f", roll, pitch, yaw, w);
 
-	//create and fill pose	
-	geometry_msgs::Pose poseEOAT;
-	quaternionTFToMsg(q_rot,poseEOAT.orientation);
-	q_rot.normalize();
-	poseEOAT.position.x= x;
-	poseEOAT.position.y= y;
-	poseEOAT.position.z= z;
+      //create and fill pose	
+      geometry_msgs::Pose poseEOAT;
+      quaternionTFToMsg(q_rot,poseEOAT.orientation);
+      q_rot.normalize();
+      poseEOAT.position.x= x;
+      poseEOAT.position.y= y;
+      poseEOAT.position.z= z;
 
-	poseEOAT.orientation.x = roll;
-	poseEOAT.orientation.y = pitch;
-	poseEOAT.orientation.z = yaw;
-	poseEOAT.orientation.w = w;
-	
-	//setup move_group and run 
-	std::string base_frame = "/base_link";
+      poseEOAT.orientation.x = roll;
+      poseEOAT.orientation.y = pitch;
+      poseEOAT.orientation.z = yaw;
+      poseEOAT.orientation.w = w;
 
-	geometry_msgs::Pose move_target = poseEOAT;
-	moveit::planning_interface::MoveGroupInterface move_group(group);
-	// Plan for robot to move to part
+      //setup move_group and run 
 
-	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
+      std::string base_frame = "/base_link";
+
+      geometry_msgs::Pose move_target = poseEOAT;
+      moveit::planning_interface::MoveGroupInterface move_group(group);
+      // Plan for robot to move to part
+
+      moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
 
       //ros::Publisher display_publisher = nh_.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
       //moveit_msgs::DisplayTrajectory display_trajectory;
 
 
-//TEST ZONE
+      //TEST ZONE
       int mode=goal->mode;
 
       int visualize=0;
-double status;
+      double status;
       moveit_msgs::RobotTrajectory trajectory;
 
       move_group.setPoseReferenceFrame(base_frame);
@@ -133,7 +143,7 @@ double status;
 	success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
       }
 
-  else if(mode==2){
+      else if(mode==2){
 
 	std::vector< geometry_msgs::Pose > poses;
 
@@ -144,7 +154,7 @@ double status;
 	//ros::ServiceClient executeKnownTrajectoryServiceClient = nh_.serviceClient<moveit_msgs::GetCartesianPathExecuteKnownTrajectory>("/execute_kinematic_path");
 
 
-poses.push_back(poseEOAT);
+	poses.push_back(poseEOAT);
 
 
 	status=	move_group.computeCartesianPath(poses, 0.005, 0.0, trajectory, true);
@@ -157,10 +167,85 @@ poses.push_back(poseEOAT);
 	success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 
       }
-else if (mode==3){//control in tooling frame
+      else if (mode>=3){//control in tooling frame
+	std::string tooling = "ERROR";
 
-      move_group.setPoseReferenceFrame("/fsp");
+
+	if(mode==3){
+	  tooling="fsp";
+	}else if (mode==4){
+	  tooling="vac";
+	}else if (mode==5){
+	  tooling="tes";
+
+	}else if (mode==6){
+	  tooling="j17";
+	}
+
+
+
+	//get transform to control point
+
+	tf::StampedTransform transform;
+	ros::Time now =ros::Time(0);
+
+	listener.waitForTransform("/base_link",tooling.c_str(),now,ros::Duration(6.0));
+
+	listener.lookupTransform("/base_link", tooling.c_str(),
+	    now, transform);
+
+	//add transorm of motion planned
+
+	/*
+	tf::StampedTransform motion;
+
+	motion.setOrigin(tf::Vector3(x,y,z));
+
+	tf::Quaternion q_rot(roll,pitch,yaw,w);
+	motion.setRotation(q_rot);
+*/
+
+	//add frames
+
+//	tf::StampedTransform finalTF(motion,ros::Time::now(),"base_link");
+
+
+//double toolX,toolY,toolZ,toolR,toolP,toolY,toolW;
+
+
+
+	//SAVE transform as pose
+
+	geometry_msgs::Pose poseNew;
+
+	tf::Vector3 orig=transform.getOrigin();
+
+	poseNew.position.x=orig[0]+x;
+	poseNew.position.y=orig[1]+y;
+	poseNew.position.z=orig[2]+z;
+
+double nRoll, nPitch, nYaw;
+
+
+nRoll=0;
+nPitch=0;
+nYaw=0;
+	tf::Quaternion newQ=tf::createQuaternionFromRPY(nRoll,nPitch,nYaw);
+
 	
+
+
+      ROS_WARN("%s: ExcutingCB: X:%f Y:%f Z:%f ",action_name_.c_str(),poseNew.position.x,poseNew.position.y,poseNew.position.z);
+	//tf::Quaternion rot=motion.getRotation();
+
+	quaternionTFToMsg(newQ,poseNew.orientation);
+
+
+
+	//linear motion planning
+
+	move_group.setPoseReferenceFrame("/base_link");
+
 	std::vector< geometry_msgs::Pose > poses;
 
 
@@ -170,7 +255,7 @@ else if (mode==3){//control in tooling frame
 	//ros::ServiceClient executeKnownTrajectoryServiceClient = nh_.serviceClient<moveit_msgs::GetCartesianPathExecuteKnownTrajectory>("/execute_kinematic_path");
 
 
-poses.push_back(poseEOAT);
+	poses.push_back(poseNew);
 
 
 	status=	move_group.computeCartesianPath(poses, 0.005, 0.0, trajectory, true);
@@ -185,14 +270,14 @@ poses.push_back(poseEOAT);
 
 
 
-}
-
-      
+      }
 
 
 
 
-	feedback_.current=status;
+
+
+      feedback_.current=status;
 
       if(visualize=1){
 	//display_publisher.publish(trajectory);
