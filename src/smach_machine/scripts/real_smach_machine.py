@@ -269,8 +269,9 @@ class Find2DFlap(smach.State):
         print("Waiting for CV srv")
 
 
-        rospy.wait_for_service('motion')
-        rospy.wait_for_service('cv_service')
+        #rospy.wait_for_service('motion')
+        #rospy.wait_for_service('cv_service')
+        #print("services found")
 
         client = actionlib.SimpleActionClient('motion', motion_msgs.msg.MoveRobotQuatAction)
         cv = rospy.ServiceProxy('cv_service',cv_service)
@@ -281,56 +282,77 @@ class Find2DFlap(smach.State):
         tolerance=.05
 
 
+        #todo remove test code only
 
-        #todo remove test only
-        tool = "vac"
+        try:
+           tf_man = rospy.ServiceProxy('transform', Mode)
+
+           tf_man("save_singular", 3)
+           rospy.sleep(4)
+           print("publishing...")
+           tf_man("publish_singular", 4)
+           rospy.sleep(4)
+
+           print("Tried and succeeded")
+
+        except rospy.ServiceException as e:
+            print("Service call failed: %s" % e)
+            print("Tried and failed")
+
+        #todo remove test code only
+        tool = "cam"
 
         print("moving camera to see charger")
-        (trans, rot) = get_pose_from_tf("base_link", "arm_cam_pose")# todo should be flap_hole_clearance, setting to other for testing
+        (trans, rot) = get_pose_from_tf("base_link", "cam_saved")
         goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
         client.send_goal(goal)
         client.wait_for_server()
-        rospy.sleep(10)
+        rospy.sleep(5)
 
+        tool="vac"
+        print("test move")
         # trying to do a tool frame motion
-        goal = motion_msgs.msg.MoveRobotQuatGoal(0,0,.5, 0, 0, 0, 1, tool, 4)
+        goal = motion_msgs.msg.MoveRobotQuatGoal(0,0,.2, 0, 0, 0, 1, tool, 4)
         client.send_goal(goal)
         client.wait_for_server()
-        rospy.sleep(10)
+        rospy.sleep(7)
 
+        tool="cam"
         print("moving camera to see charger")
-        (trans, rot) = get_pose_from_tf("base_link", "arm_cam_pose")# todo should be flap_hole_clearance, setting to other for testing
+        (trans, rot) = get_pose_from_tf("base_link", "cam_saved")
         goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
         client.send_goal(goal)
         client.wait_for_server()
-        rospy.sleep(10)
+        rospy.sleep(5)
 
+        tool="vac"
+        print("test move")
         # trying to do a tool frame motion
-        goal = motion_msgs.msg.MoveRobotQuatGoal(0, .2, 0, 0, 0, 0, 1, tool, 4)
+        goal = motion_msgs.msg.MoveRobotQuatGoal(0, -.2, 0, 0, 0, 0, 1, tool, 4)
         client.send_goal(goal)
         client.wait_for_server()
-        rospy.sleep(10)
+        rospy.sleep(7)
 
-        #todo end test code
-
-
-        #FUTURE ZEROING CODE
-
-        while not rospy.is_shutdown() and not done:
-            mode=1
-            responce=cv(mode)
-
-            print("result",responce)
-            rospy.sleep(2)
-
-            if not doneX:
-
-                if(self.in_tolerance(responce.flapX,.5,tolerance)):
-                    doneX=True
-
-
-            if(doneX and doneY):
-                done=True
+        #todo remove test code only
+        #
+        #
+        # #FUTURE ZEROING CODE
+        #
+        # while not rospy.is_shutdown() and not done:
+        #     mode=1
+        #     responce=cv(mode)
+        #
+        #     print("result",responce)
+        #     rospy.sleep(2)
+        #
+        #     if not doneX:
+        #
+        #         if(self.in_tolerance(responce.flapX,.5,tolerance)):
+        #             doneX=True
+        #
+        #
+        #     if(doneX and doneY):
+        #         done=True
 
         rospy.wait_for_service('cv_pose')  #TODO match with Matt's CV service update service to tage in args for flap, j17, tes
         cv_flap = rospy.ServiceProxy('cv_pose', Mode)

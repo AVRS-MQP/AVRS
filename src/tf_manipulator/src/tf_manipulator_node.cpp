@@ -246,9 +246,9 @@ void savePose2(){
     try{
       ros::Time now =ros::Time(0);
 
-      listener.waitForTransform("/base_link","/arm_camera",now,ros::Duration(6.0));
+      listener.waitForTransform("/base_link","/cam",now,ros::Duration(6.0));
 
-      listener.lookupTransform("/base_link", "/arm_camera",  
+      listener.lookupTransform("/base_link", "/cam",  
 	  now, transform);
 
       setPose2(transform);

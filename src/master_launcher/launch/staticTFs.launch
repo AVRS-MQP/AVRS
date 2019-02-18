@@ -9,7 +9,7 @@
  <node pkg="tf" type="static_transform_publisher" name="kinect2" args="0 0 0 1.5708 0 1.5708  camera_link camera_link2 1000"/>
 
 <!--arm camera-->
- <node pkg="tf" type="static_transform_publisher" name="camera" args=".1 0 .1 0 0 0 link_6 arm_camera 1"/>
+ <!--node pkg="tf" type="static_transform_publisher" name="camera" args=".1 0 .1 0 0 0 link_6 arm_camera 1"/-->
 
 <!--Tool change holsters-->
 

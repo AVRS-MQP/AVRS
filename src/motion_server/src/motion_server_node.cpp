@@ -180,12 +180,15 @@ class MoveRobotQuatAction
 
 	}else if (mode==6){
 	  tooling="j17";
-	}
+	}else if (mode==7){
+	tooling="arm_camera";
+		}
+
 
 
 
 	//get transform to control point
-
+//TODO put in try catch
 	tf::StampedTransform transform;
 	ros::Time now =ros::Time(0);
 
@@ -220,9 +223,20 @@ class MoveRobotQuatAction
 
 	tf::Vector3 orig=transform.getOrigin();
 
+ROS_WARN("%s: HEREA: X:%f Y:%f Z:%f ",action_name_.c_str(),orig[0],orig[1],orig[2]);
+/*
 	poseNew.position.x=orig[0]+x;
 	poseNew.position.y=orig[1]+y;
 	poseNew.position.z=orig[2]+z;
+*/
+	poseNew.position.x=x;
+	poseNew.position.y=y;
+	poseNew.position.z=z;
+
+
+
+//	tf::Quaternion tfRot =transform.getRotation();
+
 
 double nRoll, nPitch, nYaw;
 
@@ -230,23 +244,26 @@ double nRoll, nPitch, nYaw;
 nRoll=0;
 nPitch=0;
 nYaw=0;
-	tf::Quaternion newQ=tf::createQuaternionFromRPY(nRoll,nPitch,nYaw);
+	tf::Quaternion tfRot =tf::createQuaternionFromRPY(nRoll,nPitch,nYaw);
 
 	
 
-
       ROS_WARN("%s: ExcutingCB: X:%f Y:%f Z:%f ",action_name_.c_str(),poseNew.position.x,poseNew.position.y,poseNew.position.z);
+
 	//tf::Quaternion rot=motion.getRotation();
 
-	quaternionTFToMsg(newQ,poseNew.orientation);
+	quaternionTFToMsg(tfRot,poseNew.orientation);
 
 
 
 	//linear motion planning
 
-	move_group.setPoseReferenceFrame("/base_link");
 
-	std::vector< geometry_msgs::Pose > poses;
+//	move_group.setPoseReferenceFrame("/base_link");
+	move_group.setPoseReferenceFrame(tooling.c_str());
+
+
+	std::vector<geometry_msgs::Pose> poses2;
 
 
 	//moveit_msgs::GetCartesianPath srv;
@@ -255,10 +272,10 @@ nYaw=0;
 	//ros::ServiceClient executeKnownTrajectoryServiceClient = nh_.serviceClient<moveit_msgs::GetCartesianPathExecuteKnownTrajectory>("/execute_kinematic_path");
 
 
-	poses.push_back(poseNew);
+	poses2.push_back(poseNew);
 
 
-	status=	move_group.computeCartesianPath(poses, 0.005, 0.0, trajectory, true);
+	status=	move_group.computeCartesianPath(poses2, 0.005, 0.0, trajectory, true);
 
 
 	my_plan.trajectory_=trajectory;

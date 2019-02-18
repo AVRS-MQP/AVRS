@@ -37,7 +37,7 @@ class Cv_service{
   public:
     static cv::Mat getCircles(cv::Mat img){
       vector<Vec3f> circles;
-
+	ros::Duration(.1).sleep();//sleep for a little
       // Apply the Hough Transform to find the circles
       printf("circlet is %d\n", circlet);
       printf("mode is %d\n", mode);
