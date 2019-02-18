@@ -258,25 +258,85 @@ class Find2DFlap(smach.State):
                              input_keys=['camera_x', 'camera_y'])
         self.cv_sub = rospy.Subscriber('cv', PoseStamped, self.cv_callback)
 
+    def in_tolerance(self,value,target,range):
+        if value<target+range or value>target-range:
+            return True
+        else:
+            return False
+
     def execute(self, userdata):
         # if userdata.camera_x == .5 and userdata.camera_y == .5:  # camera in correct position
         print("Waiting for CV srv")
+
+
+        rospy.wait_for_service('motion')
         rospy.wait_for_service('cv_service')
 
+        client = actionlib.SimpleActionClient('motion', motion_msgs.msg.MoveRobotQuatAction)
+        cv = rospy.ServiceProxy('cv_service',cv_service)
 
-        while not rospy.is_shutdown():
+        done=False
+        doneX=False
+        doneY=False
+        tolerance=.05
+
+
+
+        #todo remove test only
+        tool = "vac"
+
+        print("moving camera to see charger")
+        (trans, rot) = get_pose_from_tf("base_link", "arm_cam_pose")# todo should be flap_hole_clearance, setting to other for testing
+        goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+        client.send_goal(goal)
+        client.wait_for_server()
+        rospy.sleep(10)
+
+        # trying to do a tool frame motion
+        goal = motion_msgs.msg.MoveRobotQuatGoal(0,0,.5, 0, 0, 0, 1, tool, 4)
+        client.send_goal(goal)
+        client.wait_for_server()
+        rospy.sleep(10)
+
+        print("moving camera to see charger")
+        (trans, rot) = get_pose_from_tf("base_link", "arm_cam_pose")# todo should be flap_hole_clearance, setting to other for testing
+        goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+        client.send_goal(goal)
+        client.wait_for_server()
+        rospy.sleep(10)
+
+        # trying to do a tool frame motion
+        goal = motion_msgs.msg.MoveRobotQuatGoal(0, .2, 0, 0, 0, 0, 1, tool, 4)
+        client.send_goal(goal)
+        client.wait_for_server()
+        rospy.sleep(10)
+
+        #todo end test code
+
+
+        #FUTURE ZEROING CODE
+
+        while not rospy.is_shutdown() and not done:
             mode=1
-            cv = rospy.ServiceProxy('cv_service',cv_service)
             responce=cv(mode)
 
             print("result",responce)
             rospy.sleep(2)
 
-        # rospy.wait_for_service('cv_pose')  #TODO match with Matt's CV service update service to tage in args for flap, j17, tes
-        # cv_flap = rospy.ServiceProxy('cv_pose', Mode)
+            if not doneX:
 
-        # cv_flap("find", 1)
-        # rospy.sleep(4)
+                if(self.in_tolerance(responce.flapX,.5,tolerance)):
+                    doneX=True
+
+
+            if(doneX and doneY):
+                done=True
+
+        rospy.wait_for_service('cv_pose')  #TODO match with Matt's CV service update service to tage in args for flap, j17, tes
+        cv_flap = rospy.ServiceProxy('cv_pose', Mode)
+
+        cv_flap("find", 1)
+        rospy.sleep(4)
 
         return 'correct_pos'
 
@@ -582,7 +642,7 @@ def main():
     with sm:
         # Add states to the container
         smach.StateMachine.add('SETCALIB', SetCalib(),
-                               transitions={'sm_ready': 'CHANGETOOLCHARGER'}, ## should be FIND2DFLAP
+                               transitions={'sm_ready': 'FIND2DFLAP'}, ## should be FIND2DFLAP
                                remapping={'tool_in': 'current_tool'})
 
         smach.StateMachine.add('FIND2DFLAP', Find2DFlap(),
