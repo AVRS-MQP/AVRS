@@ -41,4 +41,14 @@
 
 <node pkg="tf" type="static_transform_publisher" name="intmd_pose_right" args="0 -0.75 1.25 0 0 1.5708 base_link intmd_pose_right 1000"/>
 
+ <node pkg="tf" type="static_transform_publisher" name="loc_A" args=".5 -.75 .75 0 0 1.5708 base_link loc_A 1000"/>
+
+<node pkg="tf" type="static_transform_publisher" name="loc_B" args="0 -.75 .75 0 0 1.5708 base_link loc_B 1000"/>
+
+<node pkg="tf" type="static_transform_publisher" name="loc_C" args="-.5 -0.75 .75 0 0 1.5708 base_link loc_C 1000"/>
+
+
+
+
+
 </launch>

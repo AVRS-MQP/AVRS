@@ -18,4 +18,18 @@
   </include>
 
 
+  <param name="cv_camera/device_id" value="0"/>
+
+
+
+  <node name="cv_camera" pkg="cv_camera" type="cv_camera_node" output="screen">
+  </node>
+
+
+
+  <include file="$(find cv)/launch/cv.launch">
+  </include>
+  
+  
+
 </launch>

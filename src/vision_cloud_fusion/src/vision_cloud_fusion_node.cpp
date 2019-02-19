@@ -104,6 +104,8 @@ static int debugLevel =2;//2 prints all things 3 ignores mode topic
 class Fusion{
   private:
     int myMode = 0;
+float myX=0;
+float myY=.11;
     //bool computePose(){
 		void computePose(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){//OLD
 
@@ -119,11 +121,11 @@ if(myMode==1){
 	tf::TransformListener listener;
 	try{
 	  ros::Time now=ros::Time(0);
-	  listener.waitForTransform("/base_link","/flap_raw",now,ros::Duration(3.0));
-	  listener.lookupTransform("/base_link","/arm_camera",now,camera_transform);
+	  listener.waitForTransform("/base_link","/cam_saved",now,ros::Duration(3.0));
+	  listener.lookupTransform("/base_link","/cam_saved",now,camera_transform);
 	  tf::Vector3 orig=camera_transform.getOrigin();
-	  float myX=orig[0];
-	  float myY=orig[1];
+	  myX=orig[0];
+	  myY=orig[1];
 	
 	}catch(tf::TransformException &ex){
 	  ROS_ERROR("%s",ex.what());
@@ -144,8 +146,8 @@ if(myMode==1){
 	pcl::Vertices vt;
 
 	//---Crop a cylinder out of the point cloud
-	float x = 0;//-.25,.5
-	float y = .11;//was -.06
+	float x = myX;//0;//-.25,.5
+	float y = myY;//.11;//was -.06
 	float z = 0; 
 	float rad = .175;//radius//.1
 	float dep =2;//depth

@@ -219,9 +219,9 @@ class SetCalib(smach.State):
         goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 1)
 
         # Sends the goal to the action server.
-        client.send_goal(goal)
+        #client.send_goal(goal)
         print("Waiting for result")
-        client.wait_for_result()
+        #client.wait_for_result()
 
         # (trans, rot) = get_pose_from_tf("base_link", "intmd_pose_right")
         # goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
@@ -234,9 +234,9 @@ class SetCalib(smach.State):
         goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 1)
 
         # Sends the goal to the action server.
-        client.send_goal(goal)
+        #client.send_goal(goal)
         print("Waiting for result")
-        client.wait_for_result()
+        #client.wait_for_result()
         return 'sm_ready'
 
 
@@ -258,82 +258,156 @@ class Find2DFlap(smach.State):
                              input_keys=['camera_x', 'camera_y'])
         self.cv_sub = rospy.Subscriber('cv', PoseStamped, self.cv_callback)
 
-    def in_tolerance(self,value,target,range):
-        if value<target+range or value>target-range:
+    def in_tolerance(self, value, target, range):
+        if value < target + range and value > target - range:
             return True
         else:
             return False
 
     def execute(self, userdata):
         # if userdata.camera_x == .5 and userdata.camera_y == .5:  # camera in correct position
-        print("Waiting for CV srv")
 
+        # print("Waiting for motion srv")
+        # rospy.wait_for_service('motion')
+        # print("Waiting for cv srv")
+        # rospy.wait_for_service('cv_service')
+        # print("Waiting for transform srv")
+        # rospy.wait_for_service('transform')
+        # print("services found")
 
-        #rospy.wait_for_service('motion')
-        #rospy.wait_for_service('cv_service')
-        #print("services found")
+        motion_client = actionlib.SimpleActionClient('motion', motion_msgs.msg.MoveRobotQuatAction)
+        cv_client = rospy.ServiceProxy('cv_service', cv_service)
+        tf_man = rospy.ServiceProxy('transform', Mode)
 
-        client = actionlib.SimpleActionClient('motion', motion_msgs.msg.MoveRobotQuatAction)
-        cv = rospy.ServiceProxy('cv_service',cv_service)
+        done = False
+        doneX = False
+        doneY = False
+        tolerance = .005
+        target=.5
+        kp=.1
 
-        done=False
-        doneX=False
-        doneY=False
-        tolerance=.05
-
-
-        #todo remove test code only
-
-        try:
-           tf_man = rospy.ServiceProxy('transform', Mode)
-
-           tf_man("save_singular", 3)
-           rospy.sleep(4)
-           print("publishing...")
-           tf_man("publish_singular", 4)
-           rospy.sleep(4)
-
-           print("Tried and succeeded")
-
-        except rospy.ServiceException as e:
-            print("Service call failed: %s" % e)
-            print("Tried and failed")
-
-        #todo remove test code only
         tool = "cam"
 
         print("moving camera to see charger")
-        (trans, rot) = get_pose_from_tf("base_link", "cam_saved")
+        (trans, rot) = get_pose_from_tf("base_link", "loc_C")
         goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
-        client.send_goal(goal)
-        client.wait_for_server()
-        rospy.sleep(5)
+        motion_client.send_goal(goal)
+        motion_client.wait_for_server()
 
-        tool="vac"
-        print("test move")
-        # trying to do a tool frame motion
-        goal = motion_msgs.msg.MoveRobotQuatGoal(0,0,.2, 0, 0, 0, 1, tool, 4)
-        client.send_goal(goal)
-        client.wait_for_server()
-        rospy.sleep(7)
+        print("at loc_C")
 
-        tool="cam"
-        print("moving camera to see charger")
-        (trans, rot) = get_pose_from_tf("base_link", "cam_saved")
-        goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
-        client.send_goal(goal)
-        client.wait_for_server()
-        rospy.sleep(5)
 
-        tool="vac"
-        print("test move")
-        # trying to do a tool frame motion
-        goal = motion_msgs.msg.MoveRobotQuatGoal(0, -.2, 0, 0, 0, 0, 1, tool, 4)
-        client.send_goal(goal)
-        client.wait_for_server()
-        rospy.sleep(7)
+        while not rospy.is_shutdown() and not done:
+            print("zeroing on target (doneX,doneY)",doneX,doneY )
 
-        #todo remove test code only
+            mode = 1
+            responce = cv_client(mode)#request info
+
+            print("CV result:", responce)
+
+            if not doneX:
+
+                if (self.in_tolerance(responce.flapX, target, tolerance)):
+                    doneX = True
+                    print("X Zeroed")
+
+                diffX = responce.flapX-target
+
+                dx=diffX*kp*-1
+                print("dx",dx)
+                goal = motion_msgs.msg.MoveRobotQuatGoal(dx, 0, 0, 0, 0, 0, 1, tool, 7)
+                motion_client.send_goal(goal)
+                motion_client.wait_for_server()
+                rospy.sleep(.2)
+
+            if not doneY:
+
+                if (self.in_tolerance(responce.flapY, target, tolerance)):
+                    doneY= True
+                    print("Y Zeroed")
+
+                diffy = responce.flapy-target
+
+                dy=diffX*kp*-1
+                print("dy",dy)
+                goal = motion_msgs.msg.MoveRobotQuatGoal(dy, 0, 0, 0, 0, 0, 1, tool, 7)
+                motion_client.send_goal(goal)
+                motion_client.wait_for_server()
+                rospy.sleep(.2)
+
+
+            if (doneX and doneY):
+                done = True
+                print("fully zeroed")
+
+            if(done):
+                print("saving camera location")
+                try:
+
+                   tf_man("save_singular", 3)
+                   rospy.sleep(4)
+                   print("publishing...")
+                   tf_man("publish_singular", 4)
+                   rospy.sleep(4)
+
+                   print("Tried and succeeded")
+
+                except rospy.ServiceException as e:
+                    print("Service call failed: %s" % e)
+                    print("Tried and failed")
+
+                print("moving camera out of the way of point cloud")
+                (trans, rot) = get_pose_from_tf("base_link", "loc_B")
+                goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+                motion_client.send_goal(goal)
+                motion_client.wait_for_server()
+
+
+                # todo remove test code only
+        #
+        # try:
+        #
+        #    tf_man("save_singular", 3)
+        #    rospy.sleep(4)
+        #    print("publishing...")
+        #    tf_man("publish_singular", 4)
+        #    rospy.sleep(4)
+        #
+        #    print("Tried and succeeded")
+        #
+        # except rospy.ServiceException as e:
+        #     print("Service call failed: %s" % e)
+        #     print("Tried and failed")
+        #
+        # #todo remove test code only
+
+        # rospy.sleep(5)
+        #
+        # tool="vac"
+        # print("test move")
+        # # trying to do a tool frame motion
+        # goal = motion_msgs.msg.MoveRobotQuatGoal(0,0,.2, 0, 0, 0, 1, tool, 4)
+        # motion_client.send_goal(goal)
+        # motion_client.wait_for_server()
+        # rospy.sleep(7)
+        #
+        # tool="cam"
+        # print("moving camera to see charger")
+        # (trans, rot) = get_pose_from_tf("base_link", "cam_saved")
+        # goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+        # client.send_goal(goal)
+        # client.wait_for_server()
+        # rospy.sleep(5)
+        #
+        # tool="vac"
+        # print("test move")
+        # # trying to do a tool frame motion
+        # goal = motion_msgs.msg.MoveRobotQuatGoal(0, -.2, 0, 0, 0, 0, 1, tool, 4)
+        # client.send_goal(goal)
+        # client.wait_for_server()
+        # rospy.sleep(7)
+
+        # todo remove test code only
         #
         #
         # #FUTURE ZEROING CODE
@@ -354,19 +428,11 @@ class Find2DFlap(smach.State):
         #     if(doneX and doneY):
         #         done=True
 
-        rospy.wait_for_service('cv_pose')  #TODO match with Matt's CV service update service to tage in args for flap, j17, tes
-        cv_flap = rospy.ServiceProxy('cv_pose', Mode)
 
-        cv_flap("find", 1)
         rospy.sleep(4)
 
         return 'correct_pos'
 
-        # else:  # camera pos incorrect
-        #
-        #     userdata.camera_x = .5
-        #     userdata.camera_y = .5
-        #     return 'wrong_pos'
 
 
 # define state Find3DFlap
@@ -482,7 +548,7 @@ class OpenFlap(smach.State):
 
         # once open go back to clearance
         (trans, rot) = get_pose_from_tf("base_link", "flap_clearance2")
-        #todo need to update flap_clearance2 inside tf_man when we get to test with point cloud again
+        # todo need to update flap_clearance2 inside tf_man when we get to test with point cloud again
         goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
         client.send_goal(goal)
         client.wait_for_server()
@@ -505,15 +571,13 @@ class ChangeToolCharger(smach.State):
 
         client = actionlib.SimpleActionClient('motion', motion_msgs.msg.MoveRobotQuatAction)
 
-        charger_type="j17"#needs to be set to "tes" or "j17" todo
+        charger_type = "j17"  # needs to be set to "tes" or "j17" todo
 
         remove_tool("vac")
         get_tool(charger_type)
 
-
-
-        #got to pose to avoid singularity
-        tool="cam"
+        # got to pose to avoid singularity
+        tool = "cam"
         print("avoiding singulairty")
         (trans, rot) = get_pose_from_tf("base_link", "intmd_pose_left")
         goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
@@ -521,16 +585,7 @@ class ChangeToolCharger(smach.State):
         client.wait_for_server()
         rospy.sleep(1)
 
-
-
-
-
-
-
         userdata.tool_out = 2
-
-
-
 
         return 'tool_changed'
 
@@ -546,24 +601,26 @@ class PlugIn(smach.State):
         rospy.loginfo('Executing state PlugIn')
         client = actionlib.SimpleActionClient('motion', motion_msgs.msg.MoveRobotQuatAction)
 
-                 #todo remove test only
+        # todo remove test only
         tool = "vac"
 
         print("moving camera to see charger")
-        (trans, rot) = get_pose_from_tf("base_link", "arm_cam_pose")# todo should be flap_hole_clearance, setting to other for testing
+        (trans, rot) = get_pose_from_tf("base_link",
+                                        "arm_cam_pose")  # todo should be flap_hole_clearance, setting to other for testing
         goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
         client.send_goal(goal)
         client.wait_for_server()
         rospy.sleep(10)
 
         # trying to do a tool frame motion
-        goal = motion_msgs.msg.MoveRobotQuatGoal(0,0,.5, 0, 0, 0, 1, tool, 3)
+        goal = motion_msgs.msg.MoveRobotQuatGoal(0, 0, .5, 0, 0, 0, 1, tool, 3)
         client.send_goal(goal)
         client.wait_for_server()
         rospy.sleep(10)
 
         print("moving camera to see charger")
-        (trans, rot) = get_pose_from_tf("base_link", "arm_cam_pose")# todo should be flap_hole_clearance, setting to other for testing
+        (trans, rot) = get_pose_from_tf("base_link",
+                                        "arm_cam_pose")  # todo should be flap_hole_clearance, setting to other for testing
         goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
         client.send_goal(goal)
         client.wait_for_server()
@@ -575,7 +632,7 @@ class PlugIn(smach.State):
         client.wait_for_server()
         rospy.sleep(10)
 
-        #todo end test code
+        # todo end test code
 
         return 'outcome1'
 
@@ -664,11 +721,11 @@ def main():
     with sm:
         # Add states to the container
         smach.StateMachine.add('SETCALIB', SetCalib(),
-                               transitions={'sm_ready': 'FIND2DFLAP'}, ## should be FIND2DFLAP
+                               transitions={'sm_ready': 'FIND2DFLAP'},  ## should be FIND2DFLAP
                                remapping={'tool_in': 'current_tool'})
 
         smach.StateMachine.add('FIND2DFLAP', Find2DFlap(),
-                               transitions={'correct_pos': 'CHANGETOOLCHARGER',## should be FIND3DFLAP
+                               transitions={'correct_pos': 'FIND3DFLAP',  ## should be FIND3DFLAP
                                             'wrong_pos': 'FIND2DFLAP'},
                                remapping={'camera_x': 'camera_pos_x',
                                           'camera_y': 'camera_pos_y'})

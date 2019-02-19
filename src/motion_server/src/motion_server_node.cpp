@@ -181,7 +181,7 @@ class MoveRobotQuatAction
 	}else if (mode==6){
 	  tooling="j17";
 	}else if (mode==7){
-	tooling="arm_camera";
+	tooling="cam";
 		}
 
 
