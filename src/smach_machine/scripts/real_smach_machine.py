@@ -284,18 +284,19 @@ class Find2DFlap(smach.State):
         doneY = False
         tolerance = .005
         target=.5
-        kp=.1
+        kp=.2
 
         tool = "cam"
 
         print("moving camera to see charger")
-        (trans, rot) = get_pose_from_tf("base_link", "loc_C")
+        (trans, rot) = get_pose_from_tf("base_link", "loc_C2")
         goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
         motion_client.send_goal(goal)
         motion_client.wait_for_server()
 
         print("at loc_C")
 
+        rospy.sleep(5)
 
         while not rospy.is_shutdown() and not done:
             print("zeroing on target (doneX,doneY)",doneX,doneY )
@@ -305,35 +306,32 @@ class Find2DFlap(smach.State):
 
             print("CV result:", responce)
 
-            if not doneX:
-
-                if (self.in_tolerance(responce.flapX, target, tolerance)):
+            if (self.in_tolerance(responce.flapX, target, tolerance)):
                     doneX = True
                     print("X Zeroed")
 
+            if not doneX:
                 diffX = responce.flapX-target
-
                 dx=diffX*kp*-1
                 print("dx",dx)
-                goal = motion_msgs.msg.MoveRobotQuatGoal(dx, 0, 0, 0, 0, 0, 1, tool, 7)
-                motion_client.send_goal(goal)
-                motion_client.wait_for_server()
-                rospy.sleep(.2)
+            else:
+                dx=0
+
+            if (self.in_tolerance(responce.flapY, target, tolerance)):
+                doneY= True
+                print("Y Zeroed")
 
             if not doneY:
-
-                if (self.in_tolerance(responce.flapY, target, tolerance)):
-                    doneY= True
-                    print("Y Zeroed")
-
-                diffy = responce.flapy-target
-
-                dy=diffX*kp*-1
+                diffY = responce.flapY-target
+                dy=diffY*kp*-1
                 print("dy",dy)
-                goal = motion_msgs.msg.MoveRobotQuatGoal(dy, 0, 0, 0, 0, 0, 1, tool, 7)
-                motion_client.send_goal(goal)
-                motion_client.wait_for_server()
-                rospy.sleep(.2)
+            else:
+                dy=0
+
+            goal = motion_msgs.msg.MoveRobotQuatGoal(dx, dy, 0, 0, 0, 0, 1, tool, 7)
+            motion_client.send_goal(goal)
+            motion_client.wait_for_server()
+            rospy.sleep(.2)
 
 
             if (doneX and doneY):
@@ -362,7 +360,7 @@ class Find2DFlap(smach.State):
                 motion_client.send_goal(goal)
                 motion_client.wait_for_server()
 
-
+                rospy.sleep(5)
                 # todo remove test code only
         #
         # try:
@@ -536,7 +534,7 @@ class OpenFlap(smach.State):
         rospy.sleep(10)
 
         # open the flap
-        for i in range(0, 80, 3):
+        for i in range(0, 70, 5):
             rospy.sleep(1)
             hingePub.publish(i)
             (trans, rot) = get_pose_from_tf("base_link", "flap_touching")
@@ -551,6 +549,15 @@ class OpenFlap(smach.State):
         # todo need to update flap_clearance2 inside tf_man when we get to test with point cloud again
         goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
         client.send_goal(goal)
+        client.wait_for_server()
+
+        rospy.sleep(1)
+
+        # go to clearance
+        (trans, rot) = get_pose_from_tf("base_link", "loc_B")
+        goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+        client.send_goal(goal)  # Sends the goal to the action server.
+        print("Waiting for server")
         client.wait_for_server()
 
         rospy.sleep(6)

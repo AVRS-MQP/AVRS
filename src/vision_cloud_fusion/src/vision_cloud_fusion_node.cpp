@@ -105,7 +105,7 @@ class Fusion{
   private:
     int myMode = 0;
 float myX=0;
-float myY=.11;
+float myY=.1;
     //bool computePose(){
 		void computePose(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){//OLD
 
@@ -121,12 +121,14 @@ if(myMode==1){
 	tf::TransformListener listener;
 	try{
 	  ros::Time now=ros::Time(0);
-	  listener.waitForTransform("/base_link","/cam_saved",now,ros::Duration(3.0));
-	  listener.lookupTransform("/base_link","/cam_saved",now,camera_transform);
+	  listener.waitForTransform("/camera_link2","/cam_saved",now,ros::Duration(3.0));
+	  listener.lookupTransform("/camera_link2","/cam_saved",now,camera_transform);
 	  tf::Vector3 orig=camera_transform.getOrigin();
 	  myX=orig[0];
 	  myY=orig[1];
 	
+		ROS_WARN("YO LOC:%f, %f",myX,myY);
+
 	}catch(tf::TransformException &ex){
 	  ROS_ERROR("%s",ex.what());
 	  ros::Duration(1.0).sleep();
@@ -150,9 +152,9 @@ if(myMode==1){
 	float y = myY;//.11;//was -.06
 	float z = 0; 
 	float rad = .175;//radius//.1
-	float dep =2;//depth
+	float dep = 2;//depth
 	x=-x;
-	y=-y;
+//	y=-y;
 	//build cylinder TODO move to helper function
 	hullCloud->push_back(pcl::PointXYZ(x,y,z));//center
 	hullCloud->push_back(pcl::PointXYZ(x+rad,y,z));//right
@@ -319,11 +321,12 @@ if(myMode==1){
 	  y=pMin.y+((pMax.y-pMin.y)/2);
 
 	  //other values tbd if set here
-	  x=pMin.x+((pMax.x-pMin.x)/2);
+	/*  
+	x=pMin.x+((pMax.x-pMin.x)/2);
 	  z=pMin.z+((pMax.z-pMin.z)/2);
 	  y=-y;
 	  x=-x;
-
+*/
 	  tf::Quaternion q_rot;
 	  q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);//roll(x), pitch(y), yaw(z),
 

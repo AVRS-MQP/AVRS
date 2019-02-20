@@ -14,6 +14,8 @@ using namespace cv;
 
 int mode = 0;
 
+int LOOP_TIME = 8;
+
 float rawX = 0;
 float rawY = 0;
 int imgX = 0;
@@ -37,7 +39,7 @@ class Cv_service{
   public:
     static cv::Mat getCircles(cv::Mat img){
       vector<Vec3f> circles;
-	ros::Duration(.1).sleep();//sleep for a little
+//	ros::Duration(.1).sleep();//sleep for a little
       // Apply the Hough Transform to find the circles
       printf("circlet is %d\n", circlet);
       printf("mode is %d\n", mode);
@@ -57,7 +59,7 @@ class Cv_service{
 	return img;
       }
 
-      if(loop == 10){
+      if(loop >= LOOP_TIME){
 	printf("Publishing avg image\n");
 	cv::Mat meanImg = img;
 	float deltaX = sumX/loop;
@@ -160,7 +162,7 @@ class Cv_service{
       image = findFlap(image);
 
       printf("loop =                    %d\n", loop);
-      if(loop >= 10){
+      if(loop >= LOOP_TIME){
 	avgX = sumX/imgX/loop;
 	avgY = sumY/imgY/loop;
 

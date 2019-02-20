@@ -3,7 +3,7 @@
 
 
 <!--Location of Kinect-->
- <node pkg="tf" type="static_transform_publisher" name="kinect" args="-.50 .43 .580 -1.5708 0 0 base_link camera_link 1000"/>
+ <node pkg="tf" type="static_transform_publisher" name="kinect" args="-.55 .43 .530 -1.5708 0 0 base_link camera_link 1000"/>
 
 <!--pose fix for kinect-->
  <node pkg="tf" type="static_transform_publisher" name="kinect2" args="0 0 0 1.5708 0 1.5708  camera_link camera_link2 1000"/>
@@ -13,7 +13,7 @@
 
 <!--Tool change holsters-->
 
- <node pkg="tf" type="static_transform_publisher" name="tool_change" args=".75 -.5 .5 -1.5708  3.1416 0 base_link tool_change_hub 1000"/>
+ <node pkg="tf" type="static_transform_publisher" name="tool_change" args=".75 -.5 1 -1.5708  3.1416 0 base_link tool_change_hub 1000"/>
 
 <!--TESLA-->
  <node pkg="tf" type="static_transform_publisher" name="tool_1" args=".25 0 .25 0 0 0 tool_change_hub h_tool_tes 1000"/>
@@ -46,6 +46,8 @@
 <node pkg="tf" type="static_transform_publisher" name="loc_B" args="0 -.75 .75 0 0 1.5708 base_link loc_B 1000"/>
 
 <node pkg="tf" type="static_transform_publisher" name="loc_C" args="-.5 -0.75 .75 0 0 1.5708 base_link loc_C 1000"/>
+
+<node pkg="tf" type="static_transform_publisher" name="loc_C2" args="-.75 -0.5 .75 0 0 1.5708 base_link loc_C2 1000"/>
 
 
 
