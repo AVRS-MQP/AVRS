@@ -147,14 +147,16 @@ if(myMode==1){
 	//	std::vector<pcl::Vertices> vertices;
 	pcl::Vertices vt;
 
+ROS_WARN("-----myX %f, myY %f",myX,myY);
+
 	//---Crop a cylinder out of the point cloud
-	float x = myX;//0;//-.25,.5
-	float y = myY;//.11;//was -.06
+	float x=  myX;//0;//-.25,.5
+	float y= myY;//.11;//was -.06
 	float z = 0; 
 	float rad = .175;//radius//.1
 	float dep = 2;//depth
 	x=-x;
-//	y=-y;
+	y=-y;
 	//build cylinder TODO move to helper function
 	hullCloud->push_back(pcl::PointXYZ(x,y,z));//center
 	hullCloud->push_back(pcl::PointXYZ(x+rad,y,z));//right
@@ -319,16 +321,17 @@ if(myMode==1){
 
 	  //the current dept dist
 	  y=pMin.y+((pMax.y-pMin.y)/2);
-
+y=0+myY;
+//x=0-myX;
 	  //other values tbd if set here
-	/*  
+	    
 	x=pMin.x+((pMax.x-pMin.x)/2);
 	  z=pMin.z+((pMax.z-pMin.z)/2);
-	  y=-y;
-	  x=-x;
-*/
+	//  y=-y;
+	 // x=-x;
+
 	  tf::Quaternion q_rot;
-	  q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);//roll(x), pitch(y), yaw(z),
+	  q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);//roll(x), pitch(y), yaw
 
 	  //attempt to clear out roll field
 	  q_rot.normalize();

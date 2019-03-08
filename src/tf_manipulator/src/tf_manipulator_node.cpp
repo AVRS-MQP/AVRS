@@ -86,6 +86,7 @@ class TFman{//the tf manipulator class #class is the tool of the enemy
 	//republish saved raw loc
 
 	double clearDist=.2;
+	double camClearDist = .3;
 	double hingeX =-.1016;//meters
 	double hingeZ=.0216;//meters
 	double touchCorrection =0;
@@ -119,27 +120,32 @@ class TFman{//the tf manipulator class #class is the tool of the enemy
 	transf.setOrigin(tf::Vector3(-hingeX,0,-hingeZ+touchCorrection));
 	q_rot = tf::createQuaternionFromRPY(0,0,0);
 	transf.setRotation(q_rot);
-	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_hinge","flap_touching"));
+	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_hinge", 		"flap_touching"));
 
 
 	//clearance
 	transf.setOrigin(tf::Vector3(0,0,-clearDist));
 	q_rot = tf::createQuaternionFromRPY(0,0,0);
 	transf.setRotation(q_rot);
-	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_touching","flap_clearance"));
+	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_touching", 		"flap_clearance"));
 
+	//camera clearance
+	transf.setOrigin(tf::Vector3(0,0,-camClearDist));
+	q_rot = tf::createQuaternionFromRPY(0,0,0);
+	transf.setRotation(q_rot);
+	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_touching", 		"cam_clearance"));
 
 	//touching hole
 	transf.setOrigin(tf::Vector3(0,0,.05));
 	q_rot = tf::createQuaternionFromRPY(0,0,0);
 	transf.setRotation(q_rot);
-	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_saved","flap_hole_touching"));
+	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_saved", 		"flap_hole_touching"));
 
 	//clearance hole
 	transf.setOrigin(tf::Vector3(0,0,-clearDist));
 	q_rot = tf::createQuaternionFromRPY(0,0,0);
 	transf.setRotation(q_rot);
-	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_saved","flap_hole_clearance"));
+	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_saved", 		"flap_hole_clearance"));
 
 	//exit flap clearance 
 	transf.setOrigin(tf::Vector3(.1,0,-.1));
