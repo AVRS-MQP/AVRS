@@ -3,7 +3,9 @@
 #include <Console.h>
 
 LCD LCD;
-char message[]= "Select Vehicle to Simulate ";
+char message1[]= "Select Charger:";
+char message2[]= "(L)-Tesla";
+char message3[]= "(R)-J1772:";
 int n = 0;
 int pb[4] = {0,0,0,0}; //Push button top, right, bottom, left in order.
 const int ledPin = 13; // the pin that the LED is attached to
@@ -45,9 +47,8 @@ void setup() {
   }
   Console.println("Now connected to the vehicle");
   
-  LCD.printStr("Select vehicle to simulate:");
-  LCD.nextLine();
-  LCD.printStr("Top -> Tesla  " "Bottom -> Volt");
+  draw();
+  //TODO: button logic to select charger
   
   // initialize the LED pin as an output:
   pinMode(ledPin, OUTPUT);
@@ -122,4 +123,18 @@ void vehicle_type(char sel) {
 
   }
 
+}
+ 
+void draw()
+{
+ 
+  LCD.printStr(message1);
+  LCD.nextLine();
+  LCD.printStr(message2);
+  LCD.nextLine();
+//  LCD.printStr(message3);
+//  LCD.printStr("(R)-J1772");
+//  LCD.nextLine();
+
+  
 }
