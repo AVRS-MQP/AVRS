@@ -20,6 +20,7 @@ Currently launchs Kinect drivers, ROS-I, static Frame transofrmations, point clo
 ```
 roslaunch master_launcher master.launch
 ```
+roslaunch master_launcher secondary_master.launch
 
 
 - ROS-I

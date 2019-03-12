@@ -64,42 +64,68 @@ def remove_tool(current_tool):
     if current_tool == "vac":
         touching = "h_tool_vac"
         clearing = "h_tool_vac_clear"
+        clearing_C = "h_tool_vac_clear_C"
+
     elif current_tool == "tes":
         touching = "h_tool_vac"
         clearing = "h_tool_vac_clear"
+        clearing_C = "h_tool_vac_clear_C"
+
     elif current_tool == "j17":
         touching = "h_tool_j17"
         clearing = "h_tool_j17_clear"
+        clearing_C = "h_tool_vac_clear_C"
+
     else:
         print("ERROR: Invalid current tool")
 
     client = actionlib.SimpleActionClient('motion', motion_msgs.msg.MoveRobotQuatAction)
-
+    motion_done=False
     # go to clearance
     print("Going to clearance for tool: ", current_tool)
-    (trans, rot) = get_pose_from_tf("base_link", clearing)
-    goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 1)
-    client.send_goal(goal)  # Sends the goal to the action server.
-    print("Waiting for server")
-    client.wait_for_server()
+    # (trans, rot) = get_pose_from_tf("base_link", clearing)
+    # goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 1)
+    # client.send_goal(goal)  # Sends the goal to the action server.
+    # print("Waiting for server")
+    # client.wait_for_server()
+    while not motion_done:
+        motion_done = move_target(clearing, tool, 1)
+        print("STATUS:", motion_done)
+    motion_done = False
+
+    print("Going to clearance_C for tool: ", current_tool)
+    while not motion_done:
+        motion_done = move_target(clearing_C, tool, 1)
+        print("STATUS:", motion_done)
+    motion_done = False
+    print("wating for abort...")
+    rospy.sleep(10)
 
     # go to holster
     print("Going to dropoff for tool: ", current_tool)
-    (trans, rot) = get_pose_from_tf("base_link", touching)
-    goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
-    client.send_goal(goal)  # Sends the goal to the action server.
-    print("Waiting for server")
-    client.wait_for_server()
+    # (trans, rot) = get_pose_from_tf("base_link", touching)
+    # goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+    # client.send_goal(goal)  # Sends the goal to the action server.
+    # print("Waiting for server")
+    # client.wait_for_server()
+    while not motion_done:
+        motion_done = move_target(touching, tool, 1)
+        print("STATUS:", motion_done)
+    motion_done = False
 
     print("---REMOVE THE TOOL---")
-    rospy.sleep(9)
+    rospy.sleep(10)
     # go to clearance
     print("Going to clearance for tool: ", current_tool)
-    (trans, rot) = get_pose_from_tf("base_link", clearing)
-    goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
-    client.send_goal(goal)  # Sends the goal to the action server.
-    print("Waiting for server")
-    client.wait_for_server()
+    # (trans, rot) = get_pose_from_tf("base_link", clearing)
+    # goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+    # client.send_goal(goal)  # Sends the goal to the action server.
+    # print("Waiting for server")
+    # client.wait_for_server()
+    while not motion_done:
+        motion_done = move_target(clearing, tool, 1)
+        print("STATUS:", motion_done)
+    motion_done = False
 
 
 def get_tool(new_tool):
@@ -108,12 +134,18 @@ def get_tool(new_tool):
     if new_tool == "vac":
         touching = "h_tool_vac"
         clearing = "h_tool_vac_clear"
+        clearing_C = "h_tool_vac_clear_C"
+
     elif new_tool == "tes":
         touching = "h_tool_vac"
         clearing = "h_tool_vac_clear"
+        clearing_C = "h_tool_vac_clear_C"
+
     elif new_tool == "j17":
         touching = "h_tool_j17"
         clearing = "h_tool_j17_clear"
+        clearing_C = "h_tool_vac_clear_C"
+
     else:
         print("ERROR: Invalid current tool")
 
@@ -121,29 +153,46 @@ def get_tool(new_tool):
 
     # go to clearance
     print("Going to clearance for tool: ", new_tool)
-    (trans, rot) = get_pose_from_tf("base_link", clearing)
-    goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 1)
-    client.send_goal(goal)  # Sends the goal to the action server.
-    print("Waiting for server")
-    client.wait_for_server()
+    # (trans, rot) = get_pose_from_tf("base_link", clearing)
+    # goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 1)
+    # client.send_goal(goal)  # Sends the goal to the action server.
+    # print("Waiting for server")
+    # client.wait_for_server()
+    while not motion_done:
+        motion_done = move_target(clearing, tool, 1)
+        print("STATUS:", motion_done)
+    motion_done = False
+
+    while not motion_done:
+        motion_done = move_target(clearing_C, tool, 1)
+        print("STATUS:", motion_done)
+    motion_done = False
 
     # go to holster
-    print("Going to dropoff for tool: ", new_tool)
-    (trans, rot) = get_pose_from_tf("base_link", touching)
-    goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
-    client.send_goal(goal)  # Sends the goal to the action server.
-    print("Waiting for server")
-    client.wait_for_server()
+    print("Going to pickup for tool: ", new_tool)
+    # (trans, rot) = get_pose_from_tf("base_link", touching)
+    # goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+    # client.send_goal(goal)  # Sends the goal to the action server.
+    # print("Waiting for server")
+    # client.wait_for_server()
+    while not motion_done:
+        motion_done = move_target(touching, tool, 1)
+        print("STATUS:", motion_done)
+    motion_done = False
 
     print("---GET THE TOOL---")
-    rospy.sleep(9)
+    rospy.sleep(10)
     # go to clearance
     print("Going to clearance for tool: ", new_tool)
-    (trans, rot) = get_pose_from_tf("base_link", clearing)
-    goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
-    client.send_goal(goal)  # Sends the goal to the action server.
-    print("Waiting for server")
-    client.wait_for_server()
+    # (trans, rot) = get_pose_from_tf("base_link", clearing)
+    # goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, 2)
+    # client.send_goal(goal)  # Sends the goal to the action server.
+    # print("Waiting for server")
+    # client.wait_for_server()
+    while not motion_done:
+        motion_done = move_target(clearing, tool, 1)
+        print("STATUS:", motion_done)
+    motion_done = False
 
 
 def move_target(target_frame, tool, mode):
@@ -475,7 +524,7 @@ class OpenFlap(smach.State):
 
         motion_done = False
         while not motion_done:
-            motion_done = move_target("flap_touching", tool, 2)
+            motion_done = move_target("flap_touching", tool, 1)
             print("STATUS:", motion_done)
         motion_done = False
 
@@ -496,7 +545,7 @@ class OpenFlap(smach.State):
 
         motion_done = False
         while not motion_done:
-                motion_done = move_target("flap_clearance2", tool, 2)
+                motion_done = move_target("flap_clearance2", tool, 1)
 
 
         rospy.sleep(5)
@@ -535,7 +584,7 @@ class ChangeToolCharger(smach.State):
 
         print("moving to loc_PI3")
         while not motion_done:
-            motion_done = move_target("h_tool_vac_clear", tool, 2)
+            motion_done = move_target("h_tool_vac_clear", tool, 1)
             print("STATUS:", motion_done)
         rospy.sleep(3)
         motion_done = False

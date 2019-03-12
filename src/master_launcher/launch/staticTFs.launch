@@ -13,7 +13,7 @@
 
 <!--Tool change holsters-->
 
- <node pkg="tf" type="static_transform_publisher" name="tool_change" args=".50 -.75 .3 -1.5708  3.1416 -.7854 base_link tool_change_hub 1000"/>
+ <node pkg="tf" type="static_transform_publisher" name="tool_change" args="1 -.75 .3 -1.5708  3.1416 -.7854 base_link tool_change_hub 1000"/>
 
  <!--node pkg="tf" type="static_transform_publisher" name="tool_change" args=".5334 -1.3716 .2 -2.61799  3.1416 -.7854 base_link tool_change_hub 1000"/-->
 

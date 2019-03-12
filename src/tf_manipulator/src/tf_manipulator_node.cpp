@@ -133,7 +133,7 @@ class TFman{//the tf manipulator class #class is the tool of the enemy
 	transf.setOrigin(tf::Vector3(0,0,-camClearDist));
 	q_rot = tf::createQuaternionFromRPY(0,0,0);
 	transf.setRotation(q_rot);
-	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_touching", 		"cam_clearance"));
+	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_saved", 		"cam_clearance"));
 
 	//touching hole
 	transf.setOrigin(tf::Vector3(0,0,.05));
