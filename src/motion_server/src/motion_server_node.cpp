@@ -280,9 +280,9 @@ nYaw=0;
 
 	my_plan.trajectory_=trajectory;
 
-	move_group.execute(my_plan);
+	//success=move_group.execute(my_plan);
 	//	move_group.move();
-	success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+	success = (move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 
 
 

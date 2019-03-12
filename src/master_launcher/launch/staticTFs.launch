@@ -13,20 +13,22 @@
 
 <!--Tool change holsters-->
 
- <node pkg="tf" type="static_transform_publisher" name="tool_change" args=".75 -.5 1 -1.5708  3.1416 0 base_link tool_change_hub 1000"/>
+ <node pkg="tf" type="static_transform_publisher" name="tool_change" args=".50 -.75 .3 -1.5708  3.1416 -.7854 base_link tool_change_hub 1000"/>
+
+ <!--node pkg="tf" type="static_transform_publisher" name="tool_change" args=".5334 -1.3716 .2 -2.61799  3.1416 -.7854 base_link tool_change_hub 1000"/-->
 
 <!--TESLA-->
- <node pkg="tf" type="static_transform_publisher" name="tool_1" args=".25 0 .25 0 0 0 tool_change_hub h_tool_tes 1000"/>
+ <node pkg="tf" type="static_transform_publisher" name="tool_1" args=".25 0 0 0 0 0 tool_change_hub h_tool_tes 1000"/>
 
  <node pkg="tf" type="static_transform_publisher" name="tool_1_clear" args="0 0 -.25 0 0 0 h_tool_tes h_tool_tes_clear 1000"/>
 
 <!--VAC-->
- <node pkg="tf" type="static_transform_publisher" name="tool_2" args="0 0 .25 0 0 0 tool_change_hub h_tool_vac 1000"/>
+ <node pkg="tf" type="static_transform_publisher" name="tool_2" args="0 0 0 0 0 0 tool_change_hub h_tool_vac 1000"/>
 
  <node pkg="tf" type="static_transform_publisher" name="tool_2_clear" args="0 0 -.25 0 0 0 h_tool_vac h_tool_vac_clear 1000"/>
 
 <!--J1772-->
- <node pkg="tf" type="static_transform_publisher" name="tool_3" args="-.25 0 .25 0 0 0 tool_change_hub h_tool_j17 1000"/>
+ <node pkg="tf" type="static_transform_publisher" name="tool_3" args="-.25 0 0 0 0 0 tool_change_hub h_tool_j17 1000"/>
 
  <node pkg="tf" type="static_transform_publisher" name="tool_3_clear" args="0 0 -.25 0 0 0 h_tool_j17 h_tool_j17_clear 1000"/>
 
@@ -45,15 +47,15 @@
 
 <node pkg="tf" type="static_transform_publisher" name="loc_B" args="0 -.85 .75 0 0 1.5708 base_link loc_B 1000"/>
 
-<node pkg="tf" type="static_transform_publisher" name="loc_C" args="-.5 -0.75 .75 0 0 1.5708 base_link loc_C 1000"/>
+<node pkg="tf" type="static_transform_publisher" name="loc_C" args="-.65 -0.65 .75 0 0 1.5708 base_link loc_C 1000"/>
 
 <node pkg="tf" type="static_transform_publisher" name="loc_C2" args="-.75 -0.5 .75 0 0 1.5708 base_link loc_C2 1000"/>
-
- <node pkg="tf" type="static_transform_publisher" name="loc_PI0" args=".85 0 .75 1.5708 0 1.5708 base_link loc_PI0 1000"/>
-
-<node pkg="tf" type="static_transform_publisher" name="loc_PI6" args=".766 -.455 .78 1.047 0 1.5708 base_link loc_PI6 1000"/>
-
-<node pkg="tf" type="static_transform_publisher" name="loc_PI3" args=".455 -.766 .75 .524 0 1.5708 base_link loc_PI3 1000"/>
+<!--1.5708-->
+ <node pkg="tf" type="static_transform_publisher" name="loc_PI0" args=".85 0 .75 0.0 0.0 1.5708 base_link loc_PI0 1000"/>
+<!--1.048-->
+<node pkg="tf" type="static_transform_publisher" name="loc_PI6" args=".766 -.455 .78 0.0 0.0 1.5708 base_link loc_PI6 1000"/>
+<!--0.524-->
+<node pkg="tf" type="static_transform_publisher" name="loc_PI3" args=".455 -.766 .75 0.0 0.0 1.5708 base_link loc_PI3 1000"/>
 
 
 

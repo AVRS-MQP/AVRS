@@ -326,6 +326,7 @@ y=0+myY;
 	  //other values tbd if set here
 	    
 	x=pMin.x+((pMax.x-pMin.x)/2);
+x=0+myX;
 	  z=pMin.z+((pMax.z-pMin.z)/2);
 	//  y=-y;
 	 // x=-x;
