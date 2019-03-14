@@ -86,6 +86,7 @@ class TFman{//the tf manipulator class #class is the tool of the enemy
 	//republish saved raw loc
 
 	double clearDist=.2;
+	double closeClearDist=.02;
 	double camClearDist = .3;
 	double hingeX =-.1016;//meters
 	double hingeZ=.0216;//meters
@@ -128,6 +129,13 @@ class TFman{//the tf manipulator class #class is the tool of the enemy
 	q_rot = tf::createQuaternionFromRPY(0,0,0);
 	transf.setRotation(q_rot);
 	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_touching", 		"flap_clearance"));
+
+	//close clearance
+	transf.setOrigin(tf::Vector3(0,0,-closeClearDist));
+	q_rot = tf::createQuaternionFromRPY(0,0,0);
+	transf.setRotation(q_rot);
+	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_touching", 		"flap_clearance_C"));
+
 
 	//camera clearance
 	transf.setOrigin(tf::Vector3(0,0,-camClearDist));
@@ -269,9 +277,6 @@ void savePose2(){
     }
   }
 }
-
-
-
 
 
 

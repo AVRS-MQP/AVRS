@@ -104,6 +104,11 @@ rosparam set cv_camera/device_id 0
 rosrun cv_camera cv_camera_node
 
 
+rm -r ~/Arduino/libraries/ros_lib
+rosrun rosserial_client make_libraries ~/Arduino/libraries
+
+
+
 
 
 
