@@ -13,6 +13,7 @@ import coms_msgs
 from motion_msgs.msg import *
 from coms_msgs.msg import *
 from force_msgs.msg import LoadCellForces32
+from eoat_msgs.msg import eoat_to_pc
 
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
@@ -52,7 +53,7 @@ def get_pose_from_tf(base_frame, pose_frame):
 
             return result
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            print("ERROR: no TF found")
+            #  print("ERROR: no TF found")
             continue
 
 
@@ -466,9 +467,18 @@ class Find3DFlap(smach.State):
 class OpenFlap(smach.State):
     """State to perform the action of opening the flap"""
 
+    vac_val = 0
+
+    def eoat_callback(self, data):
+
+        self.vac_val = data.venturi
+        # print("in EOAT CB")
+
     def __init__(self):
         smach.State.__init__(self,
                              outcomes=['outcome1'])
+
+        self.venturi = rospy.Subscriber('eoat_data', eoat_to_pc, self.eoat_callback)
 
     def execute(self, userdata):
         rospy.loginfo('Executing state OpenFlap')
@@ -478,7 +488,7 @@ class OpenFlap(smach.State):
         rospy.sleep(2)
 
         # go to clearance
-        tool = "vac"  # the tool we will be controling the arm from
+        tool = "vac"  # the tool we will be controlling the arm from
 
         # move to the clearance pose
         motion_done = False
@@ -493,8 +503,18 @@ class OpenFlap(smach.State):
             print("STATUS:", motion_done)
         motion_done = False
 
-        print("SUCK")
-        rospy.sleep(10)  # wait to allow time for the pneumatics to turn on  todo add pnumatic control
+        print("Vac_val: ", self.vac_val)
+
+        # moves tool forward 1cm at a time if insufficient pressure is detected
+        if self.vac_val < 1000:  # Value taken from testing, make global vac_thresh?
+            while not motion_done:
+                motion_done = move_simple(0.01, 0, 0, 0, 0, 0, 1, tool, 7)
+                print("STATUS:", motion_done)
+                rospy.sleep(3)
+            motion_done = False
+
+        print("Suction with flap achieved")
+        rospy.sleep(10)  # wait to allow time for the pneumatics to turn on  TODO add pneumatic control
 
         # open the flap
         for i in range(0, 70, 5):  # 0 to 70 deg in 5 deg increments
@@ -539,7 +559,7 @@ class ChangeToolCharger(smach.State):
         rospy.loginfo(userdata.tool_in)
 
         motion_done = False
-        charger_type = userdata.charging_port  # "j17"  # needs to be set to "tes" or "j17" todo
+        charger_type = userdata.charging_port  # "j17"  # needs to be set to "tes" or "j17"
 
         # got to pose to avoid singularity
         tool = "fsp"  # control tool: the force sensing package (i.e. the end of this part or the pneumatic tool change)
@@ -575,7 +595,8 @@ class PlugIn(smach.State):
 
     def __init__(self):
         smach.State.__init__(self,
-                             outcomes=['outcome1'])
+                             outcomes=['outcome1'],
+                             input_keys=['charging_port'])
 
     def in_tolerance(self, value, target, range):  # local helper function to determine if in tollerance
         if value < target + range and value > target - range:
@@ -676,7 +697,7 @@ class PlugIn(smach.State):
                     print("Service call failed: %s" % e)
                     print("Tried and failed")
 
-                tool = 'j17'  # TODO hardcoded for testing set from user data
+                tool = userdata.charging_port
 
                 if tool == 'j17':
                     mode = 6
@@ -721,7 +742,7 @@ class ChangeToolVac(smach.State):
         rospy.loginfo(userdata.tool_in)
 
         motion_done = False
-        charger_type = userdata.charging_port  # "j17"  # needs to be set to "tes" or "j17" todo
+        charger_type = userdata.charging_port  # "j17"  # needs to be set to "tes" or "j17"
         tool = "fsp"  # moving from tool change for swapping tools
         # move to nearby clearance target
         print("moving to vac_clear")
@@ -850,7 +871,7 @@ def main():
     # Create a SMACH state machine
     sm = smach.StateMachine(outcomes=['EXITSMACH'])
     sm.userdata.current_tool = "vac"  # TODO  0:tool plate  1:suction cup  2:Tesla  3:J1772
-    sm.userdata.charger_type = "unknown"
+    sm.userdata.charger_type = "j17"  # TODO set to j17 for testing, should be blank when coms are implemented
 
     # result = move(-.78, -.72, .4015, 0, 180, 0, "link6")
 
@@ -879,7 +900,8 @@ def main():
                                           'charging_port': 'charger_type'})
 
         smach.StateMachine.add('PLUGIN', PlugIn(),
-                               transitions={'outcome1': 'CHANGETOOLVAC'})
+                               transitions={'outcome1': 'CHANGETOOLVAC'},
+                               remapping={'charging_port': 'charger_type'})
 
         smach.StateMachine.add('CHANGETOOLVAC', ChangeToolVac(),
                                transitions={'tool_changed': 'CLOSEFLAP'},
