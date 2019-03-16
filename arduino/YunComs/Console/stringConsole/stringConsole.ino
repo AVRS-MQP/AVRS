@@ -56,6 +56,8 @@ void setup() {
 
 void loop() {
   // see if there's incoming serial data
+
+  
   if (Console.available() > 0) { // read the oldest byte in the serial buffer:
 
     //For testing if terminal is outputting correctly
@@ -79,8 +81,10 @@ void loop() {
 
     //Asks for vehicle information for one of the three models 
     //May expand later, right now only needs proof of concept to get info on demand
-    if(incomingByte == '1' || incomingByte == '2' || incomingByte == '3') { //Should later be set to push buttons or other physical input
+    if(incomingByte == '1' || incomingByte == '2') { //Should later be set to push buttons or other physical input
       Console.println("Recieving vehicle information");
+      LCD.clearScreen();
+      draw();
       vehicle_type(incomingByte);
       delay(100);
       Console.println(carSel);
@@ -112,15 +116,7 @@ void vehicle_type(char sel) {
     strcpy(chargeSel, charge2);
     chgLvl = lvl2;
     flap_auto_open = false;
-    LCD.printStr("volt selected");
-  }
-  else { //Leaf
-    strcpy(carSel, car3);
-    strcpy(chargeSel, charge3);
-    chgLvl = lvl2; //May also support level 3, needs confirmation
-    flap_auto_open = false;
-    LCD.printStr("volt selected");
-
+    LCD.printStr("J1772 selected");
   }
 
 }

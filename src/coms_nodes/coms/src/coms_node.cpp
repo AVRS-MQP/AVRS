@@ -23,7 +23,7 @@ bool readFlag; //New msg will not be read unless flag is low. Set low after last
 
 void vehicle_callback(const ros::TimerEvent&)
 {
-  ROS_INFO("Callback 1 triggered");
+  ROS_INFO("Vehicle callback triggered");
 
   std::string line; //Reads each line and marks line as read
   std::ostringstream stream; //Can hold lines from text file but doesn't mark read. Can be converted 				  //to string
@@ -38,6 +38,17 @@ void vehicle_callback(const ros::TimerEvent&)
     while (getline (myFile,line)) { //reads through the opened text file line by line
       // std::cout << line << '/n';
       std::cout << line;
+
+			stream << line;
+      msg.model= stream.str();
+
+			// Only part that matters right now
+			std::cout << line;
+      stream << line;
+      msg.charger_type = stream.str();
+
+
+			//currently unused
 
       if (std::cout == "Tesla") {
         stream << line;
@@ -59,45 +70,8 @@ void vehicle_callback(const ros::TimerEvent&)
 
       }
 
-      else if (std::cout == "Volt") {
-        stream << line;
-        msg.model= stream.str();
-
-        std::cout << line;
-        stream << line;
-        msg.charger_type = stream.str();
-
-       // std::cout << line;
-       // stream << line;
-        //msg.battery_charge = stream.str();
-
-        std::cout << line;
-        msg.charge_level = 2;
-        --msgPend;
-
-        msg.flap_auto_open = false;
-      }
-
-      else if (std::cout == "Leaf") {
-        stream << line;
-        msg.model= stream.str();
-
-        std::cout << line;
-        stream << line;
-        msg.charger_type = stream.str();
-
-        //std::cout << line;
-        //stream << line;
-        //msg.battery_charge = stream.str();
-
-        std::cout << line;
-        msg.charge_level = 2;
-        --msgPend;
-
-        msg.flap_auto_open = false;
-      }
-
-    }
+    
+    } //while
 
     msg_pub.publish(msg);
   }
@@ -117,13 +91,14 @@ int main(int argc, char **argv) {
 
   //ros::Subscriber sub = nh.subscribe ("comsUplink", 1, vehicle_callback);
 
+  ros::Publisher pub = nh.advertise<coms_msgs::Vehicle>("vehicle_data", 1);
   msg_pub = nh.advertise<coms_msgs::Vehicle>("comsUplink", 1);
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(5);
 
 
-  ros::Timer timer1 = nh.createTimer(ros::Duration(0.1), vehicle_callback);
+  ros::Timer timer1 = nh.createTimer(ros::Duration(1), vehicle_callback);
 
-  ros::spinOnce();
+  ros::spin();
   loop_rate.sleep();
   ++count;
 

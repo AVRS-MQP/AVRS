@@ -1,37 +1,30 @@
-Now connected to the vehicle
-Recieving vehicle information
-Tesla
-tesla
-76
-3
-1
 Recieving vehicle information
 Volt
 J1772
+69
+2
+0
+Recieving vehicle information
+Volt
+J1772
+58
+2
+0
+Recieving vehicle information
+Tesla
+tesla
+31
+3
+1
+Recieving vehicle information
+Tesla
+tesla
+45
+3
+1
+Recieving vehicle information
+Tesla
+tesla
 19
-2
-0
-Recieving vehicle information
-Volt
-J1772
-27
-2
-0
-Recieving vehicle information
-Tesla
-tesla
-61
 3
 1
-Recieving vehicle information
-Volt
-J1772
-47
-2
-0
-Recieving vehicle information
-Leaf
-CHAdeMO
-65
-2
-0
