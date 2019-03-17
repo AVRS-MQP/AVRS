@@ -144,10 +144,13 @@ void setup()
   //setup load cells
   cellA.set_scale(calibration_factorA);
   cellA.set_offset(zero_factorA); //can cellA.tare() if needed
+  cellA.tare();
   cellB.set_scale(calibration_factorB); 
   cellB.set_offset(zero_factorB);
+  cellB.tare();
   cellC.set_scale(calibration_factorC); 
   cellC.set_offset(zero_factorC);
+  cellC.tare();
 
 //  if (! vl.begin()) {
 //    //Serial.println("Failed to find sensor");

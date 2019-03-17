@@ -50,7 +50,13 @@
 
 <node pkg="tf" type="static_transform_publisher" name="loc_B" args="0 -.85 .75 0 0 1.5708 base_link loc_B 1000"/>
 
+<node pkg="tf" type="static_transform_publisher" name="loc_BC" args="-.3 -.85 .75 0 0 1.5708 base_link loc_BC 1000"/>
+
+<node pkg="tf" type="static_transform_publisher" name="loc_B_H" args="0 -.85 1.5 0 0 1.5708 base_link loc_B_H 1000"/>
+
 <node pkg="tf" type="static_transform_publisher" name="loc_C" args="-.65 -0.65 .75 0 0 1.5708 base_link loc_C 1000"/>
+
+<node pkg="tf" type="static_transform_publisher" name="loc_C_H" args="-.65 -0.65 1.5 0 0 1.5708 base_link loc_C_H 1000"/>
 
 <node pkg="tf" type="static_transform_publisher" name="loc_C2" args="-.75 -0.5 .75 0 0 1.5708 base_link loc_C2 1000"/>
 <!--1.5708-->

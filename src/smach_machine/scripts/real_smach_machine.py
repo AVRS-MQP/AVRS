@@ -270,6 +270,12 @@ class MoveArm(smach.State):
 # based on current tool, calibrates force sensors and moves into the camera pose
 
 class FindVehicle(smach.State):
+
+    cell_a = []
+    cell_b = []
+    cell_c = []
+    n = 0  # loop tracker
+
     def coms_callback(self, data):
         self.car_model = data.model
         self.charger = data.charger_type
@@ -278,6 +284,38 @@ class FindVehicle(smach.State):
 
         print("in Coms CB")
 
+    def force_callback(self, data):
+
+        if self.n == 3:  # if three values are already saved, toss them out and reset
+
+            # self.cell_a[0] = 0
+            # self.cell_a[1] = 0
+            # self.cell_a[2] = 0
+            self.cell_a[:self.n] = [0]
+            self.cell_b[:self.n] = [0]
+            self.cell_c[:self.n] = [0]
+            self.n = 0
+
+        else:
+            self.cell_a[self.n] = data.cellA
+            self.cell_b[self.n] = data.cellB
+            self.cell_c[self.n] = data.cellC
+            self.n = self.n + 1
+
+        if data.cellA > 20 | data.cellB > 20 | data.cellC > 20:  # TODO: determine thresholds to replace these vals
+            rospy.signal_shutdown("Forces exceeded safe limit")
+
+        if self.cell_a[0] == self.cell_a[1] == self.cell_a[2]:  # cellA force vals aren't changing
+            print("Cell A Force values static, check load cell cables")
+
+        if self.cell_b[0] == self.cell_b[1] == self.cell_b[2]:  # cellB force vals aren't changing
+            print("Cell B Force values static, check load cell cables")
+
+        if self.cell_c[0] == self.cell_c[1] == self.cell_c[2]:  # cellC force vals aren't changing
+            print("Cell C Force values static, check load cell cables")
+
+        print("in Force CB")
+
     def __init__(self):
         smach.State.__init__(self,
                              outcomes=['vehicle_found', 'still_searching'],
@@ -285,10 +323,14 @@ class FindVehicle(smach.State):
 
         # temp variable, recursion forever using just userdata
         self.counter = 0
-        self.yun_coms = rospy.Subscriber('comsUplink', Vehicle, self.coms_callback)
+        self.yun_coms = rospy.Subscriber('vehicle_data', Vehicle, self.coms_callback)
+        self.venturi = rospy.Subscriber('eoat_data', eoat_to_pc, self.force_callback)
 
     def execute(self, userdata):
         rospy.loginfo('Executing state GetCarInfo')
+
+        # rospy.signal_shutdown("Forces Exploded")
+
         if self.counter < 2:
             self.counter = self.counter + 1
             return 'still_searching'
@@ -337,25 +379,35 @@ class Find2DFlap(smach.State):
         while not motion_done:
             motion_done = move_target("loc_PI6", tool, 1)
             print("STATUS:", motion_done)
+            rospy.sleep(3)
 
         motion_done = False
         print("moving to loc_PI3")
         while not motion_done:
             motion_done = move_target("loc_PI3", tool, 1)
             print("STATUS:", motion_done)
-
+            rospy.sleep(3)
         motion_done = False
+
         print("moving to loc_B")
         while not motion_done:
             motion_done = move_target("loc_B", tool, 1)
             print("STATUS:", motion_done)
-
+            rospy.sleep(3)
         motion_done = False
+
+        print("moving to loc_BC")
+        while not motion_done:
+            motion_done = move_target("loc_BC", tool, 1)
+            print("STATUS:", motion_done)
+            rospy.sleep(3)
+        motion_done = False
+
         print("moving to loc_C")
         while not motion_done:
             motion_done = move_target("loc_C", tool, 1)
             print("STATUS:", motion_done)
-
+            rospy.sleep(3)
         print("at loc_C")
 
         rospy.sleep(5)
@@ -504,26 +556,32 @@ class OpenFlap(smach.State):
         motion_done = False
 
         print("Vac_val: ", self.vac_val)
+        rospy.sleep(2)
 
-        # moves tool forward 1cm at a time if insufficient pressure is detected
-        if self.vac_val < 1000:  # Value taken from testing, make global vac_thresh?
-            while not motion_done:
-                motion_done = move_simple(0.01, 0, 0, 0, 0, 0, 1, tool, 7)
-                print("STATUS:", motion_done)
-                rospy.sleep(3)
-            motion_done = False
+        if self.vac_val < 1000:
+            # moves tool forward 1cm at a time if insufficient pressure is detected
+            while self.vac_val < 1000:  # Value taken from testing, make global vac_thresh?
+                while not motion_done:
+                    motion_done = move_simple(0, 0, 0.01, 0, 0, 0, 1, tool, 4)
+                    print("STATUS:", motion_done)
+                    print("Vac_val: ", self.vac_val)
+                    rospy.sleep(3)
+                motion_done = False
 
         print("Suction with flap achieved")
         rospy.sleep(10)  # wait to allow time for the pneumatics to turn on  TODO add pneumatic control
 
         # open the flap
-        for i in range(0, 70, 5):  # 0 to 70 deg in 5 deg increments
+        for i in range(0, 70, 10):  # 0 to 70 deg in 5 deg increments
             rospy.sleep(1)
             hingePub.publish(i)
             while not motion_done:
                 motion_done = move_target("flap_touching", tool, 1)
             motion_done = False
             print("STATUS:", motion_done)
+
+        print("---Stop Suction---")
+        rospy.sleep(5)
 
         # move out to special angled clearance
         motion_done = False
@@ -536,10 +594,10 @@ class OpenFlap(smach.State):
         # move to default positions out of the way
         motion_done = False
         while not motion_done:
-            motion_done = move_target("loc_C", tool, 1)
+            motion_done = move_target("loc_C_H", tool, 1)
         motion_done = False
         while not motion_done:
-            motion_done = move_target("loc_B", tool, 1)
+            motion_done = move_target("loc_B_H", tool, 1)
 
         rospy.sleep(2)
         return 'outcome1'

@@ -42,5 +42,9 @@
 
  <!--Include secondary launch here-->
 
+ <!--Arduino Coms-->
+  <include file="$(find master_launcher)/launch/serialcoms0.launch">
+  </include>
+
 
 </launch>
