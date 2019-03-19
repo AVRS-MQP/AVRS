@@ -270,10 +270,9 @@ class MoveArm(smach.State):
 # based on current tool, calibrates force sensors and moves into the camera pose
 
 class FindVehicle(smach.State):
-
-    cell_a = []
-    cell_b = []
-    cell_c = []
+    cell_a = [0, 0, 0]
+    cell_b = [0, 0, 0]
+    cell_c = [0, 0, 0]
     n = 0  # loop tracker
 
     def coms_callback(self, data):
@@ -296,13 +295,13 @@ class FindVehicle(smach.State):
             self.cell_c[:self.n] = [0]
             self.n = 0
 
-        else:
-            self.cell_a[self.n] = data.cellA
-            self.cell_b[self.n] = data.cellB
-            self.cell_c[self.n] = data.cellC
-            self.n = self.n + 1
+        self.cell_a[self.n] = data.cellA
+        self.cell_b[self.n] = data.cellB
+        self.cell_c[self.n] = data.cellC
+        self.n = self.n + 1
 
-        if data.cellA > 20 | data.cellB > 20 | data.cellC > 20:  # TODO: determine thresholds to replace these vals
+        if data.cellA[0] > 20 or data.cellB[0] > 20 or data.cellC[
+            0] > 20:  # TODO: determine thresholds to replace these vals
             rospy.signal_shutdown("Forces exceeded safe limit")
 
         if self.cell_a[0] == self.cell_a[1] == self.cell_a[2]:  # cellA force vals aren't changing
@@ -324,7 +323,7 @@ class FindVehicle(smach.State):
         # temp variable, recursion forever using just userdata
         self.counter = 0
         self.yun_coms = rospy.Subscriber('vehicle_data', Vehicle, self.coms_callback)
-        self.venturi = rospy.Subscriber('eoat_data', eoat_to_pc, self.force_callback)
+        # self.venturi = rospy.Subscriber('eoat_data', eoat_to_pc, self.force_callback)
 
     def execute(self, userdata):
         rospy.loginfo('Executing state GetCarInfo')
@@ -389,9 +388,16 @@ class Find2DFlap(smach.State):
             rospy.sleep(3)
         motion_done = False
 
-        print("moving to loc_B")
+        print("moving to loc_B_P")
         while not motion_done:
-            motion_done = move_target("loc_B", tool, 1)
+            motion_done = move_target("loc_B_P", tool, 1)
+            print("STATUS:", motion_done)
+            rospy.sleep(3)
+        motion_done = False
+
+        print("moving to loc_B_N")
+        while not motion_done:
+            motion_done = move_target("loc_B_N", tool, 1)
             print("STATUS:", motion_done)
             rospy.sleep(3)
         motion_done = False
@@ -467,9 +473,9 @@ class Find2DFlap(smach.State):
                     print("Tried and failed")
 
                 print("moving camera out of the way of point cloud")
-                print("moving to loc_B")
+                print("moving to loc_B_N")
                 while not motion_done:
-                    motion_done = move_target("loc_B", tool, 1)
+                    motion_done = move_target("loc_B_N", tool, 1)
                     print("STATUS:", motion_done)
 
                 rospy.sleep(5)
@@ -641,7 +647,7 @@ class ChangeToolCharger(smach.State):
 
         # return to default location
         while not motion_done:
-            motion_done = move_target("loc_B", tool, 1)
+            motion_done = move_target("loc_PI3", tool, 1)
             print("STATUS:", motion_done)
         rospy.sleep(3)
 
@@ -680,11 +686,19 @@ class PlugIn(smach.State):
         tf_man("publish_flap", 2)  # publish the saved flap
 
         # go to default location
+        # print("moving to loc_B_P")
+        # while not motion_done:
+        #     motion_done = move_target("loc_B_P", tool, 1)
+        #     print("STATUS:", motion_done)
+        #     rospy.sleep(3)
+        # motion_done = False
+
+        print("moving to loc_B_N")
         while not motion_done:
-            motion_done = move_target("loc_B", tool, 1)
+            motion_done = move_target("loc_B_N", tool, 1)
             print("STATUS:", motion_done)
+            rospy.sleep(3)
         motion_done = False
-        print("at loc_B")
 
         # go to saved pose for viewing internals of flap
         rospy.sleep(5)
@@ -774,6 +788,16 @@ class PlugIn(smach.State):
 
                 dz = .18  # the forward distance to be traveled
 
+                offset_x = .0075
+                offset_y = -.0025
+
+                # adjusting for offset
+                while not motion_done:
+                    motion_done = move_simple(offset_x, offset_y, 0, 0, 0, 0, 1, tool, mode)
+                    print("STATUS:", motion_done)
+                    rospy.sleep(3)
+                motion_done = False
+
                 # the forward motion in Z
                 while not motion_done:
                     motion_done = move_simple(0, 0, dz, 0, 0, 0, 1, tool, mode)
@@ -817,11 +841,19 @@ class ChangeToolVac(smach.State):
 
         tool = "cam"  # the control tool
         # move to the default location
-        motion_done = False
+        print("moving to loc_B_P")
         while not motion_done:
-            motion_done = move_target("loc_B", tool, 1)
+            motion_done = move_target("loc_B_P", tool, 1)
             print("STATUS:", motion_done)
-        rospy.sleep(3)
+            rospy.sleep(3)
+        motion_done = False
+
+        print("moving to loc_B_N")
+        while not motion_done:
+            motion_done = move_target("loc_B_N", tool, 1)
+            print("STATUS:", motion_done)
+            rospy.sleep(3)
+        motion_done = False
 
         return 'tool_changed'
 
@@ -843,6 +875,7 @@ class CloseFlap(smach.State):
         tool = "vac"
         # go to angled clearance
         motion_done = False
+        print("here")
         while not motion_done:
             motion_done = move_target("flap_clearance2", tool, 1)
             print("STATUS:", motion_done)
@@ -878,12 +911,21 @@ class CloseFlap(smach.State):
         tool = "cam"
 
         # go to default loc
-        motion_done = False
+        print("moving to loc_B_P")
         while not motion_done:
-            motion_done = move_target("loc_B", tool, 1)
+            motion_done = move_target("loc_B_P", tool, 1)
+            print("STATUS:", motion_done)
             rospy.sleep(3)
+        motion_done = False
 
-        # go to all zeroz
+        print("moving to loc_B_N")
+        while not motion_done:
+            motion_done = move_target("loc_B_N", tool, 1)
+            print("STATUS:", motion_done)
+            rospy.sleep(3)
+        motion_done = False
+
+        # go to all zeros
         motion_done = False
         while not motion_done:
             motion_done = move_zero()
@@ -929,7 +971,7 @@ def main():
     # Create a SMACH state machine
     sm = smach.StateMachine(outcomes=['EXITSMACH'])
     sm.userdata.current_tool = "vac"  # TODO  0:tool plate  1:suction cup  2:Tesla  3:J1772
-    sm.userdata.charger_type = "j17"  # TODO set to j17 for testing, should be blank when coms are implemented
+    sm.userdata.charger_type = "tes"  # TODO set to j17 for testing, should be blank when coms are implemented
 
     # result = move(-.78, -.72, .4015, 0, 180, 0, "link6")
 
@@ -937,7 +979,7 @@ def main():
     with sm:
         # Add states to the container
         smach.StateMachine.add('FINDVEHICLE', FindVehicle(),
-                               transitions={'vehicle_found': 'FIND2DFLAP',  # note should be FIND2DFLAP
+                               transitions={'vehicle_found': 'CLOSEFLAP',  # note should be FIND2DFLAP
                                             'still_searching': 'FINDVEHICLE'},
                                remapping={'charging_port': 'charger_type'})
 

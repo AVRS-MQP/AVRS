@@ -332,7 +332,7 @@ x=0+myX;
 	 // x=-x;
 
 	  tf::Quaternion q_rot;
-	  q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);//roll(x), pitch(y), yaw
+	  q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw - degTorad(7));//roll(x), pitch(y), yaw
 
 	  //attempt to clear out roll field
 	  q_rot.normalize();

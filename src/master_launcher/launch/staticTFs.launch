@@ -48,7 +48,9 @@
 
  <node pkg="tf" type="static_transform_publisher" name="loc_A" args=".5 -.75 .75 0 0 1.5708 base_link loc_A 1000"/>
 
-<node pkg="tf" type="static_transform_publisher" name="loc_B" args="0 -.85 .75 0 0 1.5708 base_link loc_B 1000"/>
+<node pkg="tf" type="static_transform_publisher" name="loc_B_P" args="0.15 -.85 .75 0 0 1.5708 base_link loc_B_P 1000"/>
+
+<node pkg="tf" type="static_transform_publisher" name="loc_B_N" args="-0.15 -.85 .75 0 0 1.5708 base_link loc_B_N 1000"/>
 
 <node pkg="tf" type="static_transform_publisher" name="loc_BC" args="-.3 -.85 .75 0 0 1.5708 base_link loc_BC 1000"/>
 
