@@ -98,19 +98,19 @@ def remove_tool(current_tool):
         rospy.sleep(3)
     motion_done = False
 
-    print("wating for abort...")
-    rospy.sleep(5)  # wait incase user needs to abort action
+    # print("wating for abort...")
+    # rospy.sleep(2)  # wait incase user needs to abort action
 
     # go to holster
     print("Going to dropoff for tool: ", current_tool)
     while not motion_done:
         motion_done = move_target(touching, tool, 1)
         print("STATUS:", motion_done)
-        rospy.sleep(3)
+        rospy.sleep(1)
     motion_done = False
 
     print("---REMOVE THE TOOL---")
-    rospy.sleep(5)  # wait so there is time to actuate the tool change todo add tool change control
+    rospy.sleep(2)  # wait so there is time to actuate the tool change todo add tool change control
     # go to clearance
     print("Going to clearance for tool: ", current_tool)
 
@@ -159,8 +159,8 @@ def get_tool(new_tool):
         print("STATUS:", motion_done)
     motion_done = False
 
-    print("wating for abort...")
-    rospy.sleep(5)  # wait incase user needs to abort action
+    # print("wating for abort...")
+    # rospy.sleep(5)  # wait incase user needs to abort action
 
     # go to holster
     print("Going to pickup for tool: ", new_tool)
@@ -170,7 +170,7 @@ def get_tool(new_tool):
     motion_done = False
 
     print("---GET THE TOOL---")
-    rospy.sleep(5)
+    rospy.sleep(2)
     # go to clearance
 
     print("Going to clearance for tool: ", new_tool)
@@ -188,6 +188,7 @@ def move_target(target_frame, tool, mode):
 
     (trans, rot) = get_pose_from_tf("base_link", target_frame)
     goal = motion_msgs.msg.MoveRobotQuatGoal(trans[0], trans[1], trans[2], rot[0], rot[1], rot[2], rot[3], tool, mode)
+
     client.send_goal(goal)  # Sends the goal to the action server.
     print("Waiting for server")
     client.wait_for_result()
@@ -208,11 +209,11 @@ def move_simple(x, y, z, t, u, v, w, tool, mode):
 
 
 def move_zero():
-    """A helper function to move the robot to all zeroz joint angles"""
+    """A helper function to move the robot to all zeros joint angles"""
     client = actionlib.SimpleActionClient('motion', motion_msgs.msg.MoveRobotQuatAction)
     client.wait_for_server()
 
-    goal = motion_msgs.msg.MoveRobotQuatGoal(0, 0, 0, 0, 0, 0, 0, 'na', 0)
+    goal = motion_msgs.msg.MoveRobotQuatGoal(0, 0, 0, 0, 0, 0, 0, 'vac', 0)
     client.send_goal(goal)  # Sends the goal to the action server.
     print("Waiting for server")
     client.wait_for_result()
@@ -270,9 +271,9 @@ class MoveArm(smach.State):
 # based on current tool, calibrates force sensors and moves into the camera pose
 
 class FindVehicle(smach.State):
-    cell_a = [0, 0, 0]
-    cell_b = [0, 0, 0]
-    cell_c = [0, 0, 0]
+    cell_a = [0.0, 0.0, 0.0]
+    cell_b = [0.0, 0.0, 0.0]
+    cell_c = [0.0, 0.0, 0.0]
     n = 0  # loop tracker
 
     def coms_callback(self, data):
@@ -287,12 +288,6 @@ class FindVehicle(smach.State):
 
         if self.n == 3:  # if three values are already saved, toss them out and reset
 
-            # self.cell_a[0] = 0
-            # self.cell_a[1] = 0
-            # self.cell_a[2] = 0
-            self.cell_a[:self.n] = [0]
-            self.cell_b[:self.n] = [0]
-            self.cell_c[:self.n] = [0]
             self.n = 0
 
         self.cell_a[self.n] = data.cellA
@@ -300,8 +295,8 @@ class FindVehicle(smach.State):
         self.cell_c[self.n] = data.cellC
         self.n = self.n + 1
 
-        if data.cellA[0] > 20 or data.cellB[0] > 20 or data.cellC[
-            0] > 20:  # TODO: determine thresholds to replace these vals
+        if data.cellA > 50 or data.cellB > 50 or data.cellC > 50:
+            # TODO: determine thresholds to replace these vals
             rospy.signal_shutdown("Forces exceeded safe limit")
 
         if self.cell_a[0] == self.cell_a[1] == self.cell_a[2]:  # cellA force vals aren't changing
@@ -313,7 +308,7 @@ class FindVehicle(smach.State):
         if self.cell_c[0] == self.cell_c[1] == self.cell_c[2]:  # cellC force vals aren't changing
             print("Cell C Force values static, check load cell cables")
 
-        print("in Force CB")
+        # print("in Force CB")
 
     def __init__(self):
         smach.State.__init__(self,
@@ -323,7 +318,7 @@ class FindVehicle(smach.State):
         # temp variable, recursion forever using just userdata
         self.counter = 0
         self.yun_coms = rospy.Subscriber('vehicle_data', Vehicle, self.coms_callback)
-        # self.venturi = rospy.Subscriber('eoat_data', eoat_to_pc, self.force_callback)
+        self.venturi = rospy.Subscriber('eoat_data', eoat_to_pc, self.force_callback)
 
     def execute(self, userdata):
         rospy.loginfo('Executing state GetCarInfo')
@@ -789,7 +784,7 @@ class PlugIn(smach.State):
                 dz = .18  # the forward distance to be traveled
 
                 offset_x = .0075
-                offset_y = -.0025
+                offset_y = -.002
 
                 # adjusting for offset
                 while not motion_done:
@@ -866,48 +861,65 @@ class CloseFlap(smach.State):
                              outcomes=['flap_closed'])
 
     def execute(self, userdata):
-        print("-----CloseFlap-----\n")
+        print("-----CloseFlap-----")
+
+        tf_man = rospy.ServiceProxy('transform', Mode)
 
         hingePub.publish(70)  # todo pass data on hinge angle around
         rospy.sleep(2)
+        tf_man("publish_flap", 2)  # publish the saved flap
 
         # go to clearance
         tool = "vac"
         # go to angled clearance
         motion_done = False
-        print("here")
+
+        print("moving to loc_B_H")
         while not motion_done:
-            motion_done = move_target("flap_clearance2", tool, 1)
+            motion_done = move_target("loc_B_H", tool, 1)
+            print("STATUS:", motion_done)
+            rospy.sleep(3)
+        motion_done = False
+
+        print("moving to loc_B_N")
+        while not motion_done:
+            motion_done = move_target("loc_C_H", tool, 1)
+            print("STATUS:", motion_done)
+            rospy.sleep(3)
+        motion_done = False
+
+        while not motion_done:
+            motion_done = move_target("swipe_start", tool, 1)
             print("STATUS:", motion_done)
 
         # go to very close clearance
         motion_done = False
         while not motion_done:
-            motion_done = move_target("flap_clearance_C", tool, 1)
+            motion_done = move_target("swipe_end", tool, 1)
             print("STATUS:", motion_done)
         motion_done = False
 
-        print("SUCK")
-        rospy.sleep(10)  # wait for user to abort if issues in close clearance
+        print("Flap Closed")
+        rospy.sleep(3)  # wait for user to abort if issues in close clearance
 
-        # close the flap
-        for i in range(70, 0, -5):
-            rospy.sleep(1)
-            hingePub.publish(i)
-            while not motion_done:
-                motion_done = move_target("flap_touching", tool, 1)
-            motion_done = False
+        # # close the flap
+        # for i in range(70, 0, -5):
+        #     rospy.sleep(1)
+        #     hingePub.publish(i)
+        #     while not motion_done:
+        #         motion_done = move_target("flap_touching", tool, 1)
+        #     motion_done = False
+        #
+        #     print("STATUS:", motion_done)
+        #
+        #     print("Waiting for server")
+        #
+        # # back out to clearance
+        # motion_done = False
+        # while not motion_done:
+        #     motion_done = move_target("flap_clearance", tool, 1)
 
-            print("STATUS:", motion_done)
-
-            print("Waiting for server")
-
-        # back out to clearance
-        motion_done = False
-        while not motion_done:
-            motion_done = move_target("flap_clearance", tool, 1)
-
-        rospy.sleep(5)
+        # rospy.sleep(3)
         tool = "cam"
 
         # go to default loc
@@ -918,15 +930,7 @@ class CloseFlap(smach.State):
             rospy.sleep(3)
         motion_done = False
 
-        print("moving to loc_B_N")
-        while not motion_done:
-            motion_done = move_target("loc_B_N", tool, 1)
-            print("STATUS:", motion_done)
-            rospy.sleep(3)
-        motion_done = False
-
         # go to all zeros
-        motion_done = False
         while not motion_done:
             motion_done = move_zero()
             rospy.sleep(3)
@@ -972,6 +976,7 @@ def main():
     sm = smach.StateMachine(outcomes=['EXITSMACH'])
     sm.userdata.current_tool = "vac"  # TODO  0:tool plate  1:suction cup  2:Tesla  3:J1772
     sm.userdata.charger_type = "tes"  # TODO set to j17 for testing, should be blank when coms are implemented
+    sm.userdata.flap_toggle = False  # Flag to mark if the flap has been pushed open or if it was already unlatched
 
     # result = move(-.78, -.72, .4015, 0, 180, 0, "link6")
 
@@ -979,7 +984,7 @@ def main():
     with sm:
         # Add states to the container
         smach.StateMachine.add('FINDVEHICLE', FindVehicle(),
-                               transitions={'vehicle_found': 'CLOSEFLAP',  # note should be FIND2DFLAP
+                               transitions={'vehicle_found': 'FIND2DFLAP',  # note should be FIND2DFLAP
                                             'still_searching': 'FINDVEHICLE'},
                                remapping={'charging_port': 'charger_type'})
 

@@ -161,6 +161,18 @@ class TFman{//the tf manipulator class #class is the tool of the enemy
 	transf.setRotation(q_rot);
 	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_clearance","flap_clearance2"));
 
+	//Left swipe end pos
+	transf.setOrigin(tf::Vector3(0,0,-.1));
+	q_rot = tf::createQuaternionFromRPY(0,0,0);
+	transf.setRotation(q_rot);
+	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_saved","swipe_end"));
+
+	//Left swipe start pos
+	transf.setOrigin(tf::Vector3(0,0,-.075));
+	q_rot = tf::createQuaternionFromRPY(0,degTorad(-90),0);
+	transf.setRotation(q_rot);
+	br2.sendTransform(tf::StampedTransform(transf,ros::Time::now(), "flap_touching","swipe_start"));
+
 
       }
       if(myMode==4){
